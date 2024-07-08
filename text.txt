@@ -1,0 +1,17 @@
+Scripts Explanation
+"start": "node ts-node src/index.ts"
+
+Explanation: This script runs the ts-node command with Node.js to execute the src/index.ts TypeScript file.
+Execution: npm start
+"build": "tsc"
+
+Explanation: This script runs the TypeScript compiler (tsc) to compile the TypeScript files in the project.
+Execution: npm run build
+"dev": "nodemon --exec ts-node src/index.ts"
+
+Explanation: This script uses nodemon to watch for file changes and automatically restart the ts-node process to execute the src/index.ts file.
+Execution: npm run dev
+"test": "echo \"Error: no test specified\" && exit 1"
+
+Explanation: This placeholder script echoes an error message indicating no tests are specified and exits with a status code of 1.
+Execution: npm test
