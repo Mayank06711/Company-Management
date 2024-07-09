@@ -13,6 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum EmployeeStatus {
+  Active
+  Inactive
+  OnLeave
+  NoticePeriod
+}
+
 model User {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   userName   String   @unique
@@ -29,27 +36,40 @@ model User {
 }
 
 model Employee {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String    @db.ObjectId
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String         @db.ObjectId
   salary    Float
   position  String
   role      String
-  status    String
-  upId      String    @db.ObjectId
-  hiredAt   DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  downId    String[]  @db.ObjectId
+  status    EmployeeStatus
+  upId      String         @db.ObjectId
+  hiredAt   DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  downId    String[]       @db.ObjectId
   projects  String[]?
 
   @@map("Employee")
 }
 
+enum Status {
+  Active
+  Inactive
+  Completed
+  Archieved
+  Discarded
+}
+
 model Project {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  thumbnail   String
-  projectName String
-  Manager     String @db.ObjectId
-  teamLead    String @db.ObjectId
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  thumbnail     String
+  desc          String?
+  projectName   String
+  budget        Float
+  projectStatus Status   @default(Inactice)
+  Manager       String   @db.ObjectId
+  teamLead      String   @db.ObjectId
+  team          String[] @db.ObjectId
+  createdAt     DateTime
 }
 
 model Applicant {
