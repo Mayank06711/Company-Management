@@ -1,14 +1,16 @@
-import express from "express"
+import dotenv from 'dotenv';
+import express, { Request, Response } from 'express';
 
+dotenv.config()
+const app = express();
 
-const app = express()
+// Middleware
+app.use(express.json());
 
-app.get('/', (req, res) => {
-    res.status(201).send('Hello Now my application is working!')
-})
+app.get('/', (req: Request, res: Response) => {
+    res.status(201).send('Hello Now my application is working!');
+});
 
-// hello brother
-
-app.listen(3000,()=>{
-    console.log('Server is running on port 3000')
-})
+app.listen(3000, ()  => {
+  console.log('Server is running on port 3000');
+});
