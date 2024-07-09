@@ -15,3 +15,69 @@ Execution: npm run dev
 
 Explanation: This placeholder script echoes an error message indicating no tests are specified and exits with a status code of 1.
 Execution: npm test
+
+
+
+// Follow up
+
+to start  a project follow steps
+FIRST open terminal 
+mkdir projectName then go inside that 
+1 npm inti -y (if want all default)
+2 if want npm i typescript --save-dev 
+3 initialse typescript npx  tsc --init for typescript config filr
+4 npm i @types/node --save-dev for this will give type safety for all nodejs api like files processand operating system and all
+5 mkdir src
+6 index.ts
+7 npm i express 
+8 npm i @types/express --save-dev for this will give type safety
+9 npm i ts-node  nodemon --save-dev for so that we can add scripts in package.js like we do in javascript
+10 create a file nodemons.json amd inside that  (in home not in src)
+{
+    "watch":["folderName"], like src
+    "ext":".js,.ts",
+    "exec":"npx ts-node ./src/fileName" fileName -> wher we are listening to app 
+}
+11 now add "start":"npx nodemon" in package.json file {or npm run dev we can add also see on chatGpt how to do this} 
+12 now run npm start
+13 now when importing express from express we import type alsoas below
+import express {Express, Request, Response} from "express" here {Express, Request, Response} are type of app req and res 
+14 const app:Express = express()
+15 app.get("/" ,asysn (req:Request, res:Response){
+ 
+})
+16 now file structure
+ src-> MVC middleware routes utils and schema for validation of schema using zod 
+ 17 npm i prisma @prisma/client  install these then
+ 18 npx prisma init (you will see scheme.prisma etc)
+ 19 add database provider name , database name passowrd 
+ 20 now create models in schema.prisma file under prisma folder
+ 21 npx prisma migrate dev --name whatYoudidinModel
+ 22 set up environment variables
+ -> npm i dotenv 
+ -> set config 
+ 23 now start writing logics of your code as usual
+ 24 Create Docker images
+ 25 deploy on aws
+ 26 share on github
+ 27 add ci/cd pipelines
+ 28 share on linkdin
+ 29 read again whole project and learn few codes 
+ 30 all done
+
+
+
+ next type is nextFunction imported from express
+
+ const asyncHandler = (method:Function)=>{ //  method will be any funcion
+     return (req:Request, res:Response, next:nextFunction)=>{
+        Promise.all() // or try catch whaatever we want
+        try{
+            method(req, res, next)
+        }
+        catch(e:any){
+            throw new Exception
+            next()
+        }
+     }
+ }
