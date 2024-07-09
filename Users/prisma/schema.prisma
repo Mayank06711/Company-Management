@@ -14,15 +14,48 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  email     String   @unique
-  name      String
-  password  String
-  authToken String?
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userName   String   @unique
+  email      String   @unique
+  name       String
+  password   String
+  authToken  String?
   resetToken String
-  MFAKey    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  MFAKey     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@map("User")
+}
+
+model Employee {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String    @db.ObjectId
+  salary    Float
+  position  String
+  role      String
+  status    String
+  upId      String    @db.ObjectId
+  hiredAt   DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  downId    String[]  @db.ObjectId
+  projects  String[]?
+
+  @@map("Employee")
+}
+
+model Project {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  thumbnail   String
+  projectName String
+  Manager     String @db.ObjectId
+  teamLead    String @db.ObjectId
+}
+
+model Applicant {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  userId     String    @db.ObjectId
+  appliedFor String
+  references String[]?
 }
