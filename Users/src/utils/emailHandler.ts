@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer"
 import { ApiError } from "./apiError"
-import { EmailOptions } from "../helper/scriptInterfaces"
+import { EmailOptions } from "../types/scriptInterfaces.ts"
 import EventEmitter  from "../utils/eventEmitter.ts"
 
 const sendEmail = async(option:EmailOptions)=>{
