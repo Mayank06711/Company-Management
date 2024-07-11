@@ -15,20 +15,20 @@ datasource db {
 
 
 model User {
-     id  String  @id  @default(auto()) @map("_id") @db.ObjectId   // mapping id with mongodb _id 
-     name String 
-     username String @unique
-     email String @unique 
-     password String
-     role String @default("user")
-     active Boolean @default(true)
-     refreshToken String
-     passwordResetToken String?
-     passwordResetExpires DateTime? 
-     isMFAEnabled Boolean @default(false)
-     MFASecretKey String?
-     createdAt DateTime @default(now())
-     updatedAt DateTime @updatedAt
+    id  String  @id  @default(auto()) @map("_id") @db.ObjectId   // mapping id with mongodb _id 
+    name String 
+    username String @unique
+    email String @unique 
+    password String
+    role String @default("user")
+    active Boolean @default(true)
+    refreshToken String
+    passwordResetToken String?
+    passwordResetExpires DateTime? 
+    isMFAEnabled Boolean @default(false)
+    MFASecretKey String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     notifications Notifications[] // Establishing one-to-many relationship
     employee Employee[]  // // Establishing one-to-many relationship
@@ -85,7 +85,8 @@ model Position {
 enum ProjectStatus {
   Active
   Inactive
-  Archived
+  Completed
+  Archieved
   Discarded
 }
 
@@ -94,7 +95,8 @@ model Project {
   name        String         @unique
   desc        String?
   teamLead    String         @db.ObjectId
-  members     String[]
+  members     String[]       @db.ObjectId
+  manager     String         @db.ObjectId
   status      ProjectStatus  @default(Inactive)
   budget      Float          @default(0)
   deadline    DateTime?
