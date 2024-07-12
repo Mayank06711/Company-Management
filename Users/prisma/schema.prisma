@@ -20,13 +20,13 @@ model User {
     username String @unique
     email String @unique 
     password String
-    role String @default("user")
+    role String @default("user") // default is user in case of creating user we will check wat is role if on normal routes user tries to make him admin it will throw error  There will be a special route to make a user admin that will be accessed  by a secret key stored in database/app/company localfiles or only admins will know also that key would be updatable with three layer security
     active Boolean @default(true)
     refreshToken String
     passwordResetToken String?
     passwordResetExpires DateTime? 
     isMFAEnabled Boolean @default(false)
-    MFASecretKey String?
+    MFASecretKey String? 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
