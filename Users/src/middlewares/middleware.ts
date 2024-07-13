@@ -178,6 +178,8 @@ class middleware {
 
 
 
+
+
 const uploadFilesToCloudinary = async (files = []) => {
     const uploadPromises = files.map((file) => {
       return new Promise((resolve, reject) => {
@@ -208,6 +210,7 @@ const uploadFilesToCloudinary = async (files = []) => {
     }
   };
 
+export  {middleware}
 
                        // above class implements encapsulation and abstraction of OOPs and maintain
 //const result = await uploadFilesToCloudinary([file]);
