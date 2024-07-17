@@ -2,6 +2,8 @@ import  {CreateBucketCommand, DeleteObjectCommand, DeleteObjectsCommand, GetObje
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { ApiError } from "../utils/apiError"
 
+
+
 // Ensure that environment variables are set and defined
 //we can use non-null assertion (!) to tell TypeScript that these variables will not be undefined.
 const accessKeyId = process.env.AWS_ACCESS_KEY_ID!
@@ -18,7 +20,8 @@ const s3Client = new S3Client({
 
 class AWS_SERVICES {
     // to upload objects to s3
-    private static async putObjectTos3(bucket:string,fileName:string  , contentType: string, expiresIn: number){
+    private static async putObjectTos3(bucket:string,fileName:string  , contentType: string, expiresIn: number): Promise<string>
+    {
         const command = new PutObjectCommand({
             Bucket: bucket,
             Key: fileName,
@@ -26,7 +29,9 @@ class AWS_SERVICES {
             ContentType: contentType
         })
        try {
-         const preSignedUrlForPutingObject  =await getSignedUrl(s3Client,command, {expiresIn: expiresIn})
+         //console.log("hdd", command)
+         const preSignedUrlForPutingObject  = await getSignedUrl(s3Client,command, {expiresIn: expiresIn})
+         console.log("preSignedUrlForPutingObject",preSignedUrlForPutingObject)
          return preSignedUrlForPutingObject;
        } catch (error:any) {
           console.error(error);

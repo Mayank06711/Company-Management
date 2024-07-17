@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer"
 import { ApiError } from "./apiError"
-import { EmailOptions } from "../types/scriptInterfaces.ts"
-import EventEmitter  from "../utils/eventEmitter.ts"
+import { EmailOptions } from "../types/scriptInterfaces"
+import EventEmitter  from "../utils/eventEmitter"
 
 const sendEmail = async(option:EmailOptions)=>{
     // create a transporter
@@ -32,3 +32,5 @@ const sendEmail = async(option:EmailOptions)=>{
         throw new ApiError(500, "Nodemailer error", error.message)
      }
    }
+
+   export {sendEmail}
