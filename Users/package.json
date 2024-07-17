@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "This is a backend project for management in a company",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "npx nodemon",
     "build": "tsc",

@@ -13,69 +13,137 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum EmployeeStatus {
-  Active
-  Inactive
-  OnLeave
-  NoticePeriod
-}
 
 model User {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  userName   String   @unique
-  email      String   @unique
-  name       String
-  password   String
-  authToken  String?
-  resetToken String
-  MFAKey     String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+     id  String  @id  @default(auto()) @map("_id") @db.ObjectId   // mapping id with mongodb _id 
+     name String 
+     username String @unique
+     email String @unique 
+     password String
+     role String @default("user")
+     active Boolean @default(true)
+     refreshToken String
+     passwordResetToken String?
+     passwordResetExpires DateTime? 
+     isMFAEnabled Boolean @default(false)
+     MFASecretKey String?
+     createdAt DateTime @default(now())
+     updatedAt DateTime @updatedAt
 
-  @@map("User")
+    notifications Notifications[] // Establishing one-to-many relationship
+    employee Employee[]  // // Establishing one-to-many relationship
+   
+   
+    @@map("User")
 }
+
 
 model Employee {
-  id        String         @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String         @db.ObjectId
-  salary    Float
-  position  String
-  role      String
-  status    EmployeeStatus
-  upId      String         @db.ObjectId
-  hiredAt   DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  downId    String[]       @db.ObjectId
-  projects  String[]?
+  id String @id @default(auto()) @map("_id") @db.ObjectId   // mapping id with mongodb _id 
+  phoneNum Int @unique
+  positionDesc String?
+  departmentId String @db.ObjectId
+  joinedAt DateTime @default(now())
+  salary Int @default(0)
+  isActive Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("Employee")
+  // setting one-many relationship
+  userId String @db.ObjectId
+  user User @relation(fields: [userId], references: [id])
+  positionId String @db.ObjectId
+  position Position @relation(fields: [positionId], references: [id])
 }
 
-enum Status {
+
+model Department {
+  id String @id @default(auto()) @map("_id") @db.ObjectId   // mapping id with mongodb _id 
+  name String @unique
+  desc String?
+  isActive Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project[]
+  // @@index([name]) no need bcz due to the fact that Prisma automatically creates a unique index for any field marked with @unique. 
+}
+
+
+model Position {
+  id String @id @default(auto()) @map("_id") @db.ObjectId   // mapping id with mongodb _id 
+  name String @unique // MD 1,2,3
+  desc String?
+  vacancy Int @default(0)  //  i.e no of jobs left for this specific position
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+ // setting 
+  employee Employee[] // 1-n
+}
+
+enum ProjectStatus {
   Active
   Inactive
-  Completed
-  Archieved
+  Archived
   Discarded
 }
 
 model Project {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  thumbnail     String
-  desc          String?
-  projectName   String
-  budget        Float
-  projectStatus Status   @default(Inactice)
-  Manager       String   @db.ObjectId
-  teamLead      String   @db.ObjectId
-  team          String[] @db.ObjectId
-  createdAt     DateTime
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId   // mapping id with mongodb _id 
+  name        String         @unique
+  desc        String?
+  teamLead    String         @db.ObjectId
+  members     String[]
+  status      ProjectStatus  @default(Inactive)
+  budget      Float          @default(0)
+  deadline    DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  departmentId String        @db.ObjectId
+  department  Department     @relation(fields: [departmentId], references: [id])
 }
 
-model Applicant {
-  id         String    @id @default(auto()) @map("_id") @db.ObjectId
-  name       String
-  userId     String    @db.ObjectId
-  appliedFor String
-  references String[]?
+
+enum ApplicantionType {
+  Employee
+  Intern
+  Visitor
 }
+
+model Applicantion {
+  id String @id @default(auto()) @map("_id") @db.ObjectId   // mapping id with mongodb _id 
+  phoneNum Int @unique
+  type ApplicantionType @default(Employee)
+  positionId String @db.ObjectId
+  applicantDesc String?
+  isActive Boolean @default(false) 
+  appliedAt DateTime @default(now())
+}
+
+
+
+
+enum NotificationsState {
+  Pending 
+  Sent
+  Recieved
+}
+
+model Notifications {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  type String
+  message String
+  status NotificationsState @default(Pending)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Define a field to link to User
+  userId String @db.ObjectId
+  user User @relation(fields: [userId], references: [id])
+}
+
+
+
+
