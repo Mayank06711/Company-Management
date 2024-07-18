@@ -99,6 +99,7 @@ class AWS_SERVICES {
        }
     }
 
+    
 
     static putObjectToS3 = AWS_SERVICES.putObjectTos3;
 }
