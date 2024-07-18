@@ -53,3 +53,4 @@ app.get('/', (req: Request, res: Response) => {
 
 app.listen(process.env.PORT || 9001, () => {
     console.log('Server is running on port 9001')
+})
