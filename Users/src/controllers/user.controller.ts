@@ -1,4 +1,4 @@
-import {Request, Response, NextFunction} from "express"
+import {Request,Response, NextFunction} from "express"
 import JWT from "jsonwebtoken"
 import  bcrypt from "bcrypt"
 import {Redis} from "ioredis"
@@ -10,10 +10,11 @@ import asyncHandler from "../utils/asyncHandler"
 import {sendEmail} from "../utils/emailHandler"
 import {UserSchema, EmployeeSchema, PositionSchema, NotificationsSchema} from "../models/zodValidation.schemas"
 // import {} from "../utils/eventEmitter"
+import { newRequest, User } from "../types/express"
 
 class UserService {
     // User-related methods go here
-    private static async generateRefreshAndAccessToken(req:Request, res:Response){
+    private static async generateRefreshAndAccessToken(req:newRequest, res:Response){
         // Implementation for generating a MFA token
     }
     private static async newUser(req:Request, res:Response){
@@ -40,7 +41,7 @@ class UserService {
         if(!uploadedResult){
             throw new ApiError(404, "Photo Upload failed please try again later")
         } 
-        const newUser = await prisma.user.create({
+        const newUser  = await prisma.user.create({
             data:{
                 ...result.data,
                 photo_url: uploadedResult[0].url,          

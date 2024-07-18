@@ -6,10 +6,8 @@ import multer from "multer"
 import { v2 as cloudinary } from "cloudinary"
 import AsyncHandler from "../utils/asyncHandler"
 import prisma from "../helper/clientPrism";
+import
 
-interface newRequest extends Request {
-  user: 
-}
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
@@ -108,7 +106,7 @@ class middleware {
 
 
 
-private static async verifyJWT(req: Request, res: Response, next: NextFunction) {
+private static async verifyJWT(req: newRequest, res: Response, next: NextFunction) {
     try {
         let accessToken = req.cookies.accessToken || req.headers.authorization?.replace("Bearer ", "");
 
