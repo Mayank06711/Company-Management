@@ -7,6 +7,6 @@ const router  = express.Router();
 
 
 router.route("/uploadAws").get(AWSAPI.upload)
-
+router.post('/generatePresignedUrl', AWSAPI.generatePresignedURL);;
 
 export default router
