@@ -47,8 +47,9 @@ app.use("/api/v1/users", userRouter)
 app.use("/api/v1/aws", AWSRouter)
 app.use("api/v1/department" ,/*    auth middleware */ DepartmentRouter  );
 
-
+app.get('/', (req: Request, res: Response) => {
+    res.status(201).send('Hello Now my application is working!');
+});
 
 app.listen(process.env.PORT || 9001, () => {
-    console.log('Server is running on port 9001');
-});
+    console.log('Server is running on port 9001')
