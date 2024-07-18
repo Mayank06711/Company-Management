@@ -43,7 +43,7 @@ import userRouter from "../src/routes/user.routes"
 import AWSRouter from "../src/routes/aws.routes"
 
 app.use("/api/v1/users", userRouter)
-app.use("/api/v1/aws", AWSRouter)
+app.use("/api/v1/xyz-company", AWSRouter)
 
 
 
