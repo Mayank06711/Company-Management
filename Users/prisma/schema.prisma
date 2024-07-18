@@ -15,23 +15,25 @@ datasource db {
 
 
 model User {
-     id  String  @id  @default(auto()) @map("_id") @db.ObjectId   // mapping id with mongodb _id 
-     name String 
-     username String @unique
-     email String @unique 
-     password String
-     role String @default("user")
-     active Boolean @default(true)
-     refreshToken String
-     passwordResetToken String?
-     passwordResetExpires DateTime? 
-     isMFAEnabled Boolean @default(false)
-     MFASecretKey String?
-     createdAt DateTime @default(now())
-     updatedAt DateTime @updatedAt
+    id  String  @id  @default(auto()) @map("_id") @db.ObjectId   // mapping id with mongodb _id 
+    name String 
+    username String @unique
+    email String @unique 
+    photo_url String?
+    photo_public_id String?
+    password String
+    role String @default("user") // default is user in case of creating user we will check what is role if on normal routes user tries to make him admin it will throw error  There will be a special route to make a user admin that will be accessed  by a secret key stored in database/app/company localfiles or only admins will know also that key would be updatable with three layer security
+    active Boolean @default(true)
+    refreshToken String @default("")
+    passwordResetToken String?
+    passwordResetExpires DateTime? 
+    isMFAEnabled Boolean @default(false)
+    MFASecretKey String? 
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-    notifications Notifications[] // Establishing one-to-many relationship
-    employee Employee[]  // // Establishing one-to-many relationship
+    notifications Notifications[] // Establishing one-to-many relationship can be empty as well
+    employee Employee[]  // // Establishing one-to-many relationship can be empty as well
    
    
     @@map("User")
@@ -67,6 +69,8 @@ model Department {
 
   project Project[]
   // @@index([name]) no need bcz due to the fact that Prisma automatically creates a unique index for any field marked with @unique. 
+
+  @@map("Department")
 }
 
 
@@ -85,7 +89,8 @@ model Position {
 enum ProjectStatus {
   Active
   Inactive
-  Archived
+  Completed
+  Archieved
   Discarded
 }
 
@@ -94,7 +99,8 @@ model Project {
   name        String         @unique
   desc        String?
   teamLead    String         @db.ObjectId
-  members     String[]
+  members     String[]       @db.ObjectId
+  manager     String         @db.ObjectId
   status      ProjectStatus  @default(Inactive)
   budget      Float          @default(0)
   deadline    DateTime?
@@ -143,6 +149,8 @@ model Notifications {
   userId String @db.ObjectId
   user User @relation(fields: [userId], references: [id])
 }
+
+
 
 
 
