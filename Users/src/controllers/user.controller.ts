@@ -61,7 +61,7 @@ class UserService {
         res
         .status(201)
         .json(new ApiResponse(201, formattedResult, "Congratualtion you account is created"))
-}
+    }
     private static async loginUser(req:Request, res:Response){
         // Implementation for logging in a user
     }

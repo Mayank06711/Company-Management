@@ -41,10 +41,11 @@ console.log(process.env.NODE_ENV, process.env.PORT)
 // Import routes
 import userRouter from "../src/routes/user.routes"
 import AWSRouter from "../src/routes/aws.routes"
+import DepartmentRouter from "./routes/department.routes"
 
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/aws", AWSRouter)
-
+app.use("api/v1/department" ,/*    auth middleware */ DepartmentRouter  );
 
 
 
