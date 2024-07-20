@@ -6,7 +6,10 @@ import multer from "multer"
 import { v2 as cloudinary } from "cloudinary"
 import AsyncHandler from "../utils/asyncHandler"
 import prisma from "../helper/clientPrism";
-import
+import cloudin
+
+
+
 
 
 cloudinary.config({
