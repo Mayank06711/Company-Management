@@ -5,6 +5,25 @@ const prisma = new PrismaClient({
 })
 
 
+
+
+prisma.$use(async (params, next)=>{
+    if(params.model === "User"){
+        if(params.action === "create" || params.action === "update"){
+            const user = params.args.data;
+            console.log(user,"|", params.model, "|",params.action,"|", params.args)
+            if(user.password){
+                user.password = await bcrypt.hash(user.password, 10);
+                console.log(user.password, "hashed passowrd \n primsa middleware")
+            }
+        }
+    }
+    const result = await next(params)
+    console.log(result)
+    return result;
+})
+
+
 // prisma.$extends({
 //     client: {
 //       async $use(params, next) {
@@ -23,21 +42,5 @@ const prisma = new PrismaClient({
 //       },
 //     },
 //   });
-
-prisma.$use(async (params, next)=>{
-    if(params.model === "User"){
-        if(params.action === "create" || params.action === "update"){
-            const user = params.args.data;
-            console.log(user,"|", params.model, "|",params.action,"|", params.args)
-            if(user.password){
-                user.password = await bcrypt.hash(user.password, 10);
-                console.log(user.password, "hashed passowrd \n primsa middleware")
-            }
-        }
-    }
-    const result = await next(params)
-    console.log(result)
-    return result;
-})
 
 export default prisma;

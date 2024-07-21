@@ -7,6 +7,9 @@ import { v2 as cloudinary } from "cloudinary"
 import AsyncHandler from "../utils/asyncHandler"
 import prisma from "../helper/clientPrism";
 
+interface newRequest extends Request {
+  user: 
+}
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
@@ -102,6 +105,47 @@ class middleware {
     //     req.user = user; // Attach the user object to the request object for further use in the route handler
     //     next(); // Call the next middleware function or route handler
     // } // it is a private method
+
+
+
+private static async verifyJWT(req: Request, res: Response, next: NextFunction) {
+    try {
+        let accessToken = req.cookies.accessToken || req.headers.authorization?.replace("Bearer ", "");
+
+        if (!accessToken) {
+            return res.status(401).json({ message: 'No access token provided' });
+            // or: throw new Error('No access token provided');
+        }
+
+        const decodedToken = JWT.verify(accessToken, process.env.ACCESS_TOKEN_SECRET)
+        const user = await prisma.user.findFirst({
+            where: { id: decodedToken.id },
+            select: {
+                isMFAEnabled: true,
+                active: true,
+                username: true,
+                role: true,
+            },
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+            // or: throw new Error('User not found');
+        }
+
+        req.user = user;
+        next();
+    } catch (error) {
+        console.error('Error in verifyJWT:', error);
+        return res.status(401).json({ message: 'Invalid token' });
+        // or: next(error);
+    }
+}
+
+
+
+
+
 
     // private static async verifyMFA(MFASecretKey: string, id: string) {
     //     const user = await prisma.User.findFirst({
