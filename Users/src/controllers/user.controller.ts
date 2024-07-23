@@ -10,6 +10,7 @@ import { AuthServices } from "../helper/auth"
 import {sendEmail} from "../utils/emailHandler"
 import {UserSchema, EmployeeSchema, PositionSchema, NotificationsSchema} from "../models/zodValidation.schemas"
 // import {} from "../utils/eventEmitter"
+import { newRequest, User } from "../types/express"
 
 class UserService {
     // User-related methods go here
@@ -38,7 +39,7 @@ class UserService {
         if(!uploadedResult){
             throw new ApiError(500, "Photo Upload failed please try again later")
         } 
-        const newUser = await prisma.user.create({
+        const newUser  = await prisma.user.create({
             data:{
                 ...result.data,
                 photo_url: uploadedResult[0].url,          

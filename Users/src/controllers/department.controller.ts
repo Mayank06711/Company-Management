@@ -8,7 +8,7 @@ import { newRequest } from "../types/express"
 class DepartmentService{
 
 
-    private static async newDepartment(req: Request, res: Response) {
+    private static async newDepartment(req: newRequest, res: Response) {
         const parsedDepartment = DepartmentSchema.safeParse(req.body);
     
         // Check user role
@@ -28,13 +28,14 @@ class DepartmentService{
     
             return res.status(201).json({ msg: "Department created successfully", department: newDepartment });
         } catch (error:any) {
+        } catch (error:any) {
             console.error("Error creating department:", error);
             return res.status(500).json({ msg: "Internal server error", error: error.message });
         }
     }
     
 
-    private static async updateDepartment(req: Request, res: Response) {
+    private static async updateDepartment(req: newRequest, res: Response) {
         const { id } = req.params; // Get the department ID from the request parameters
         const parsedDepartment = DepartmentSchema.safeParse(req.body); // Validate incoming data
     
@@ -94,7 +95,8 @@ class DepartmentService{
     }
     
 
-   static registerDepartment = asyncHandler.wrap(DepartmentService.newDepartment)
+   static registerDepartment = DepartmentService.newDepartment;
 }
 
+export default DepartmentService;
 export default DepartmentService;
