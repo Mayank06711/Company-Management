@@ -1,8 +1,19 @@
-import express from 'express';
-import { User} from "@prisma/client" 
+import express, {Request} from 'express';
 
-declare module express {
-    export interface Request {
-        user: User;
+declare global{
+    namespace Express{
+      interface Request{
+        user?:{
+            id: string;
+            username: string;
+            email: string;
+            role: string;
+            isMFAEnabled: boolean;
+            active: boolean;
+        }
+      }
     }
-} // definig type overwrite in module express there is an interface Request on which we want to attach extra type user which is of typoe User   
+  }
+
+export {newRequest}
+
