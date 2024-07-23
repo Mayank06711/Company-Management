@@ -10,7 +10,7 @@ import { AuthServices } from "../helper/auth"
 import {sendEmail} from "../utils/emailHandler"
 import {UserSchema, EmployeeSchema, PositionSchema, NotificationsSchema} from "../models/zodValidation.schemas"
 // import {} from "../utils/eventEmitter"
-import { newRequest, User } from "../types/express"
+import { newRequest} from "../types/express"
 
 class UserService {
     // User-related methods go here
