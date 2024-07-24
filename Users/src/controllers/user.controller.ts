@@ -338,20 +338,76 @@ class UserService {
             throw new ApiError(500, "Something went wrong try again")
        }
         res.status(200).json(new ApiResponse(200, {name:updatedUser.name, id: req.user?.id},"Password is updated"))
-}
-    private static async resetPassword(req:Request, res:Response){
-        // Implementation for resetting a user's password
-        
     }
-    private static async sendVerificationEmail(req:Request, res:Response){
+
+    private static async sendEmailVerificationLink(req:Request, res:Response){
         // Implementation for sending a verification email
+        // user will click on the verification link and he will be verified by token url has
+        const {email} = req.body;
+        if(!email){
+            throw new ApiError(400,"Please enter your correct email")
+        }
+        const user = await prisma.user.findFirst({
+            where:{
+                email: email
+            }
+        })
+        if(!user){
+            throw new ApiError(404, "User not found")
+        }
+        const timestamp = Date.now().toString();
+        const token = AuthServices.randomToken(28, user.email, timestamp);
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const verificaonUrl = `${baseUrl}/verify-email?token=${token}&email=${user.email}&timestamp=${timestamp}`
+        const emailOption = {
+            email: user.email,
+            subject: "Email Verification",
+            message: `Click the link below to verify your email address which is valid only for 10 minutes \n \n \n  ${verificaonUrl} \n \n \n \n  If you did not requested this please ignore this email, or can complain at  support@xyz.com`
+        }
+       
+        sendEmail(emailOption)
+        // send verificaon email with token
+        res.status(200).json(new ApiResponse(200, user.id, "Verification email sent successfully"))
     }
-    private static async verifyVerificationEmail(req:Request, res:Response){
+
+    private static async verifyEmail(req: Request, res: Response) {
         // Implementation for verifying a verification email
+        const { token, email, timestamp } = req.query;
+    
+        if (!token || typeof token !== 'string') {
+            return res.status(400).send('<html><body><h1 style="color: red;">Invalid verification link: Token is missing</h1></body></html>');
+        }
+    
+        if (!email || typeof email !== 'string') {
+            return res.status(400).send('<html><body><h1 style="color: red;">Invalid verification link: Email is missing or invalid</h1></body></html>');
+        }
+    
+        if (!timestamp || typeof timestamp !== 'string') {
+            return res.status(400).send('<html><body><h1 style="color: red;">Invalid verification link: Timestamp is missing</h1></body></html>');
+        }
+    
+        const currentTime = Date.now().toString();
+        const timeDifference = Math.abs(Number(currentTime) - Number(timestamp));
+        const tenMinutesInMilliseconds = 10 * 60 * 1000;
+    
+        if (timeDifference > tenMinutesInMilliseconds) {
+            return res.status(400).send('<html><body><h1 style="color: red;">Token has expired</h1></body></html>');
+        }
+    
+        const originalToken = AuthServices.randomToken(28, email, timestamp);
+    
+        if (token !== originalToken) {
+            return res.status(400).send('<html><body><h1 style="color: red;">Invalid token</h1></body></html>');
+        }
+    
+        res.status(200).send('<html><body><h1 style="color: green;">Email Verified Successfully</h1></body></html>');
     }
+    
+    
     private static async forgotPassword(req:Request, res:Response){
-        // Implementation for sending a password reset email
+        //Implementation for sending a password reset email
     }
+
     private static async resetPasswordWithToken(req:Request, res:Response){
         // Implementation for resetting a user's password with a token
     }
@@ -365,6 +421,8 @@ class UserService {
     static enableTwoFactorAuth = asyncHandler.wrap(UserService.enableMFA);
     static disableTwoFactorAuth = asyncHandler.wrap(UserService.disableMFA);
     static changeYourPassword = asyncHandler.wrap(UserService.changePassword);
+    static sendVerificationURLEmail = UserService.sendEmailVerificationLink;
+    static verifyYourEmail = UserService.verifyEmail;
 }
 
 export default UserService;
