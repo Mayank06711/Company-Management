@@ -227,3 +227,29 @@ Consider chunked uploads for large files to manage memory and improve reliabilit
 Monitor and optimize S3 configurations for performance, including regional settings and storage classes.
 Conclusion:
 Using AWS S3 for file uploads is generally a good practice due to its scalability, reliability, and cost-effectiveness. It allows you to offload file storage and management responsibilities to AWS, freeing up your server resources. Ensure to implement best practices for error handling, security, and performance to create a robust and efficient file upload system.
+
+
+
+// Using git pull with --rebase
+You are on branch a.
+You pull the changes from branch b using git pull origin b --rebase.
+The changes from branch b are applied to branch a as if they were made directly on top of branch a.
+
+
+
+
+//
+
+SHA-256 (Secure Hash Algorithm 256-bit) is a cryptographic hash function that produces a 256-bit (32-byte) fixed-length hash value from any input data. It is widely used in various security applications and protocols, including TLS and SSL, PGP, SSH, IPsec, and Bitcoin.
+
+How SHA-256 Works
+Input Processing: The input message is padded to ensure its length is a multiple of 512 bits.
+Initialization: SHA-256 initializes an array of eight 32-bit words (these are fixed constants).
+Processing in Blocks: The message is processed in blocks of 512 bits.
+Compression Function: Each block is processed with a series of mathematical operations involving bitwise operations, modular additions, and the mixing of the bits.
+Output: The final output is a 256-bit hash value.
+Properties of SHA-256
+Deterministic: For the same input, SHA-256 will always produce the same hash value.
+Pre-image Resistance: It is computationally infeasible to reverse the hash function to get the original input.
+Collision Resistance: It is computationally infeasible to find two different inputs that produce the same hash value.
+Avalanche Effect: A small change in the input (even a single bit) will produce a significantly different hash.
