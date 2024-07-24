@@ -27,8 +27,8 @@ class DepartmentService{
             });
     
             return res.status(201).json({ msg: "Department created successfully", department: newDepartment });
-        } catch (error:any) {
-        } catch (error:any) {
+        } 
+        catch (error:any) {
             console.error("Error creating department:", error);
             return res.status(500).json({ msg: "Internal server error", error: error.message });
         }
@@ -98,5 +98,4 @@ class DepartmentService{
    static registerDepartment = DepartmentService.newDepartment;
 }
 
-export default DepartmentService;
 export default DepartmentService;
