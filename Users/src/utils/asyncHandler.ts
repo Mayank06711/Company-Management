@@ -1,10 +1,12 @@
-import { NextFunction, Request, Response } from "express";
 
+import { RequestHandler,Request, NextFunction, Response } from "express";
+// import {newRequest} from "../types/express"
 // Define a type for the request handler which can be an async or a normal function
-type AsyncRequestHandler = (req: Request, res: Response, next: NextFunction) => 
+type AsyncRequestHandler = (req: Request, res: Response, next: NextFunction) => void | Promise<void>;
+
 
 class AsyncHandler {
-  static wrap(requestHandler: AsyncRequestHandler) {
+  static wrap(requestHandler: AsyncRequestHandler){
     return (req: Request, res: Response, next: NextFunction) => {
       Promise.resolve(requestHandler(req, res, next)).catch((err: any) => {
         console.log("ERROR FROM REQUEST HANDLER FUNCTION: " + err);
@@ -17,9 +19,41 @@ class AsyncHandler {
       });
     };
   }
+
+     
+    //  static wrap(fn: Function, options: AsyncHandlerOptions = {}) {
+    //   return async function  asyncHandlerWrapper(req: newRequest, res: Response, next: NextFunction) {
+    //     return Promise.resolve(fn(req, res, next)).catch((error) => {
+    //       if (options.logError) {
+    //         console.error('Error:', error);
+    //       }
+    //       next(error);
+    //     });
+    //   };
+    // }
+    
+
+
 }
 
 export default AsyncHandler
+
+
+
+
+
+// function asyncHandler(fn: Function, options: AsyncHandlerOptions = {}) {
+//   return function asyncHandlerWrapper(req: Request, res: Response, next: NextFunction) {
+//     return Promise.resolve(fn(req, res, next)).catch((error) => {
+//       if (options.logError) {
+//         console.error('Error:', error);
+//       }
+//       next(error);
+//     });
+//   };
+// }
+
+
 
 
 /*

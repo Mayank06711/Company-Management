@@ -23,11 +23,6 @@ interface User {
   notifications?: Notifications[];
   employee?: Employee[];
 }
-
-interface newRequest extends Request {
-  user?: User
-}
-
   
   interface Employee {
     id: string;  // mapped to MongoDB ObjectId
@@ -122,4 +117,23 @@ interface newRequest extends Request {
     user: User;
   }
   
-  export {User , Employee , Notifications ,Applicantion , Project , Position , Department , newRequest}
+  export {User , Employee , Notifications ,Applicantion , Project , Position , Department }
+
+declare global{
+    namespace Express{
+      interface Request{
+        user?:{
+            id: string;
+            username: string;
+            email: string;
+            role: string;
+            isMFAEnabled: boolean;
+            active: boolean;
+        }
+      }
+    }
+  }
+
+export {newRequest}
+
+

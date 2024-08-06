@@ -28,7 +28,9 @@ class DepartmentService{
             });
     
             return res.status(201).json({ msg: "Department created successfully", department: newDepartment });
-        } catch (error:any) {
+
+        } 
+        catch (error:any) {
             console.error("Error creating department:", error);
             return res.status(500).json({ msg: "Internal server error", error: error.message });
         }
@@ -60,7 +62,8 @@ class DepartmentService{
             });
     
             return res.status(200).json({ msg: "Department updated successfully", department: updatedDepartment });
-        } catch (error: any) {
+
+        } catch (error:any) {
             if (error.code === 'P2002') { // Unique constraint violation
                 return res.status(409).json({ msg: "Department name must be unique", error: error.message });
             }
@@ -70,7 +73,8 @@ class DepartmentService{
     }
     
 
-    private static async deleteDepartment(req: newRequest , res: Response) {
+
+    private static async deleteDepartment(req:Request , res: Response) {
         const { id } = req.params; // Get the department ID from the request parameters
     
         // Check user role
