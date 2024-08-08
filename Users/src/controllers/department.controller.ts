@@ -3,17 +3,18 @@ import prisma from "../helper/clientPrism"
 import { DepartmentSchema } from "../models/zodValidation.schemas"
 import asyncHandler from "../utils/asyncHandler"
 import { newRequest } from "../types/express"
+import { ApiResponse } from "../utils/apiResponse"
 
 
 class DepartmentService{
 
 
-    private static async newDepartment(req: newRequest, res: Response) {
+    private static async newDepartment(req: Request, res: Response) {
         const parsedDepartment = DepartmentSchema.safeParse(req.body);
     
         // Check user role
         if (req.user?.role !== "Director" && req.user?.role !== "CEO") {
-            return res.status(403).json({ msg: "You are not eligible" });
+            return res.status(403).json(new ApiResponse(403, "You are not allowed to create department"));
         }
     
         // Validate the department data
@@ -35,7 +36,7 @@ class DepartmentService{
     }
     
 
-    private static async updateDepartment(req: newRequest, res: Response) {
+    private static async updateDepartment(req: Request, res: Response) {
         const { id } = req.params; // Get the department ID from the request parameters
         const parsedDepartment = DepartmentSchema.safeParse(req.body); // Validate incoming data
     
@@ -94,8 +95,40 @@ class DepartmentService{
         }
     }
     
+    private static async getAboutDepartment(req:Request, res:Response){
+        const { id } = req.params; // Get the department ID from the request parameters
+        if(id && typeof id !== 'string'){
+            return res.status(400).json({ msg: "Invalid department id" });
+        }
+        const department = await prisma.department.findFirst({
+            where: { 
+                AND:[
+                    { id },
+                    {isActive:true}
+                ]
+             },
+        })
+        if(!department){
+            return res.status(404).json({ msg: "Department not found" });
+        }
+        return res.status(200).json(new ApiResponse(200, {id:department.id, name:department.name, description:department.desc },"Department found"))
+    }
+
+    private static async departmentById(id:string){
+        return await prisma.department.findFirst({
+            where: {
+                AND:[
+                    { id },
+                    {isActive:true}
+                ]},
+        })
+    }
 
    static registerDepartment = DepartmentService.newDepartment;
+   static renewDepartment = DepartmentService.updateDepartment;
+   static removeDepartment = DepartmentService.deleteDepartment;
+   static getDepartmentAbout = DepartmentService.getAboutDepartment;
+   static getDepartmentById = DepartmentService.departmentById
 }
 
 export default DepartmentService;
