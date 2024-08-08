@@ -1,0 +1,32 @@
+name: Node.js CI #The name of the workflow
+
+on: #Specifies when the workflow should run. In this example, it runs on pushes and pull requests to the main branch.
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs: # Defines the jobs that will be run in the workflow
+  test:
+    runs-on: ubuntu-latest # Specifies the environment the job should run on. ubuntu-latest is a common choice.
+
+    strategy: # Runs the tests in multiple versions of Node.js (16.x and 18.x)
+      matrix:
+        node-version: [12.x, 14.x, 16.x]
+
+    steps:
+    - name: Checkout repository #Uses the actions/checkout action to check out your repository’s code
+      uses: actions/checkout@v2 # Uses the actions/setup-node action to set up the Node.js environment.
+
+    - name: Set up Node.js # Runs npm install to install your project’s dependencies.
+      uses: actions/setup-node@v2 # Runs npm test to execute your tests.
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run tests
+      run: npm test
