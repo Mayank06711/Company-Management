@@ -3,7 +3,7 @@ name: Node.js CI #The name of the workflow
 on: #Specifies when the workflow should run. In this example, it runs on pushes and pull requests to the main branch.
   push:
     branches:
-      - main
+      - users
   pull_request:
     branches:
       - main
