@@ -11,6 +11,9 @@ import {sendEmail} from "../utils/emailHandler"
 import {UserSchema, EmployeeSchema, PositionSchema, NotificationsSchema} from "../models/zodValidation.schemas"
 // import {} from "../utils/eventEmitter"
 import { newRequest} from "../types/express"
+import EmitEvents from "../utils/eventEmitter"
+import { EMAIL_FAILED, EMAIL_VERIFY, OK_EMAIL_SENT, PRIORITY } from "../constant"
+import { time } from "console"
 
 class UserService {
     // User-related methods go here
@@ -57,6 +60,7 @@ class UserService {
                               photo_url: newUser.photo_url,          
                               role: newUser.role,
                             }
+       //  this.sendEmailVerificationLink() can be used during registration directly
         res
         .status(201)
         .json(new ApiResponse(201, formattedResult, "Congratualtion you account is created"))
@@ -79,6 +83,10 @@ class UserService {
         })
         if(!user){
             throw new ApiError(404, "User not found");
+        }
+        
+        if(!user.emailVerified){
+            throw new ApiError(401, "Please verify your email first");
         }
         
         if(!await AuthServices.isKeyCorrect(password, user.password)){
@@ -356,24 +364,26 @@ class UserService {
             throw new ApiError(404, "User not found")
         }
         const timestamp = Date.now().toString();
-        const token = AuthServices.randomToken(28, user.email, timestamp);
+        // const token = AuthServices.customToken(18, user.email as string, timestamp as string);
+        // const token = AuthServices.randomToken(18, user.email, timestamp as string)
+        const token = AuthServices.generateDeterministicToken(user.email, timestamp)
+        // console.log(token, timestamp, user.email);
         const baseUrl = `${req.protocol}://${req.get('host')}`;
-        const verificaonUrl = `${baseUrl}/verify-email?token=${token}&email=${user.email}&timestamp=${timestamp}`
+        // console.log(req.originalUrl)
+        const verificaonUrl = `${baseUrl}/api/v1/users/verify-email?token=${token}&email=${user.email}&timestamp=${timestamp}`
         const emailOption = {
             email: user.email,
             subject: "Email Verification",
-            message: `Click the link below to verify your email address which is valid only for 10 minutes \n \n \n  ${verificaonUrl} \n \n \n \n  If you did not requested this please ignore this email, or can complain at  support@xyz.com`
+            message: `Click the link below to verify your email address which is valid only for 10 minutes \n \n \n${verificaonUrl}\n \n \n \n  If you did not requested this please ignore this email, or can complain at  support@xyz.com`
         }
-       
-        sendEmail(emailOption)
-        // send verificaon email with token
-        res.status(200).json(new ApiResponse(200, user.id, "Verification email sent successfully"))
+        EmitEvents.createEvent(EMAIL_VERIFY, emailOption, PRIORITY.EMAIL_VERIFY)
+        return res.status(200).json(new ApiResponse(200, user.id, "Verification email process started"))
     }
 
     private static async verifyEmail(req: Request, res: Response) {
         // Implementation for verifying a verification email
         const { token, email, timestamp } = req.query;
-    
+        console.log(email, token, timestamp)
         if (!token || typeof token !== 'string') {
             return res.status(400).send('<html><body><h1 style="color: red;">Invalid verification link: Token is missing</h1></body></html>');
         }
@@ -389,17 +399,30 @@ class UserService {
         const currentTime = Date.now().toString();
         const timeDifference = Math.abs(Number(currentTime) - Number(timestamp));
         const tenMinutesInMilliseconds = 10 * 60 * 1000;
-    
+        
+        //console.log(timeDifference, timestamp,  currentTime, tenMinutesInMilliseconds)
         if (timeDifference > tenMinutesInMilliseconds) {
             return res.status(400).send('<html><body><h1 style="color: red;">Token has expired</h1></body></html>');
         }
     
-        const originalToken = AuthServices.randomToken(28, email, timestamp);
-    
+        // const orginaltoken =AuthServices.randomToken(18, email, timestamp)
+        //const originalToken = AuthServices.customToken(18, email as string, timestamp as string);
+        const originalToken = AuthServices.generateDeterministicToken(email, timestamp)
+        console.log(originalToken , " orginaltoken vs token", token )
+       
         if (token !== originalToken) {
             return res.status(400).send('<html><body><h1 style="color: red;">Invalid token</h1></body></html>');
         }
-    
+
+        // we can change flag of verified to true here
+        const user = await prisma.user.update({
+            where:{
+                email:email,
+            },
+            data:{
+                emailVerified: true,
+            }
+        })
         res.status(200).send('<html><body><h1 style="color: green;">Email Verified Successfully</h1></body></html>');
     }
     
