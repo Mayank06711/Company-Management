@@ -11,12 +11,11 @@ import {z} from "zod"
   
 
   const EmployeeSchema = z.object({
-    phoneNum: z.number().int().positive().min(1000000000, "Phone number must be a valid 10-digit number").optional(),
+    phoneNum: z.number().int().positive().min(1000000000, "Phone number must be a valid 10-digit number"),
     positionDesc: z.string().optional(),
-    departmentId: z.string().optional(),
-    salary: z.number().int().min(0, "Salary must be a non-negative integer").optional(),
-    userId: z.string().optional(),
-    positionId: z.string().optional(),
+    departmentId: z.string(),
+    salary: z.number().int().min(0, "Salary must be a non-negative integer"),
+    positionId: z.string(),
   });
 
 
