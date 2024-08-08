@@ -58,13 +58,64 @@ class AuthServices {
     
     private static genRandomToken(byte: number, data: string, timestamp: string): string {
         const resetToken = crypto.randomBytes(byte).toString("hex");
-        const tokenWithTimestamp = resetToken + data + timestamp;
-        return crypto.createHash("sha256").update(tokenWithTimestamp).digest("hex");
+       // console.log(`Generated Reset Token: ${resetToken}`);
+        const tokenWithTimestamp = resetToken+data+timestamp;
+       // console.log(`Token with Timestamp: ${tokenWithTimestamp} ${typeof tokenWithTimestamp} last is typeof`);
+        const hashedToken =  crypto.createHash("sha256").update(tokenWithTimestamp).digest("hex");
+        //console.log(`Hashed Token: ${hashedToken} ${typeof hashedToken} last is typeof`);
+        return hashedToken;
     }
+
+    private static generateSimpleHash(input: string): string {
+        // A simple hash function to ensure we get a deterministic token
+        let hash = 0;
+        for (let i = 0; i < input.length; i++) {
+            const char = input.charCodeAt(i);
+            hash = (hash << 5) - hash + char;
+            hash |= 0; // Convert to 32bit integer
+        }
+        return hash.toString(16); // Convert hash to hex string
+    }
+
+    private static genCustomToken(byte: number, data: string, timestamp: string): string {
+        // Simple token generation function
+        let randomPart = '';
+        for (let i = 0; i < byte; i++) {
+            randomPart += String.fromCharCode(97 + Math.floor(Math.random() * 26)); // Generate random letters
+        }
+        console.log(`Generated Random Part: ${randomPart}`);
+
+        const combined = randomPart + data + timestamp;
+        console.log(`Combined String: ${combined}`);
+
+        const hashedToken = this.generateSimpleHash(combined);
+        console.log(`Custom Hashed Token: ${hashedToken}`);
+
+        return hashedToken;
+    }
+
+    private static simpleHash(input: string): string {
+        let hash = 0;
+        for (let i = 0; i < input.length; i++) {
+            const char = input.charCodeAt(i);
+            hash = (hash << 5) - hash + char;
+            hash |= 0; // Convert to 32bit integer
+        }
+        return hash.toString(16); // Convert hash to hex string
+    }
+
+    // Generate a deterministic token
+    static generateDeterministicToken(data: string, timestamp: string): string {
+        const staticString = "static-part"; // A predefined static string
+        const combined = data + timestamp + staticString;
+        return this.simpleHash(combined);
+    }
+
     static genJWT_Token = AuthServices.generate_JWT_Token
     static isKeyCorrect = AuthServices.checkHashedKey;
     static getAuthToken = AuthServices.generateResetToken
     static randomToken = AuthServices.genRandomToken
+    static customToken = AuthServices.genCustomToken
 }
 
 export {AuthServices}
