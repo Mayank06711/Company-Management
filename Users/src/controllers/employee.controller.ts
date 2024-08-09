@@ -8,6 +8,8 @@ import { AuthServices } from "../helper/auth";
 import UserService from "./user.controller";
 import DepartmentService from "./department.controller";
 import { newRequest } from "../types/express";
+import EmitEvents from "../utils/eventEmitter";
+import { PRIORITY, SEND_EMAIL } from "../constant";
 
 
 class Employees {
@@ -204,6 +206,7 @@ class Employees {
         phoneNum: true,
         salary:true,
         joinedAt:true,
+        departmentId:true,
         user: {
           select: {
             id: true,
@@ -223,7 +226,7 @@ class Employees {
       throw new ApiError(404, "Employee not found");
     }
     
-    const formattedResults = {id: employee.id, userID: employee.user.id, position: employee.position.name, department: employee.department.name, salary: employee.salary, joinedAt: employee.joinedAt}
+    const formattedResults = {id: employee.id, userID: employee.user.id, position: employee.position.name, departmentId: employee.departmentId, salary: employee.salary, joinedAt: employee.joinedAt}
     res
      .status(200)
      .json(new ApiResponse(200, {formattedResults}, "Employee retrieved successfully"));
@@ -239,27 +242,53 @@ class Employees {
     if(!file || file === undefined || file.length === 0){
       throw new ApiError(400, "File is required");
     }
-
-    // send email to his dapartment
-
     
+    
+    // send email to his dapartment
+    EmitEvents.createEvent(SEND_EMAIL, {message:"Employee Help Request", email:req.user.email, req:req.files}, PRIORITY.OK)
+    return res.status(200).json(new ApiResponse(200, {username:req.user.username},"Your reqest is initiated"))
 
   }
 
-
-  private static async reportAbuse(req: Request, res: Response) {}
-
-  private static async generateReport(req: Request, res: Response) {}
-
   private static async getReport(req: Request, res: Response) {}
 
-  private static async sendReport(req: Request, res: Response) {}
+  private static async sendReport(req: Request, res: Response) {
+    const { employeeId } = req.params;
+    
+    if (!req.user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+    
+    if(!employeeId || employeeId === undefined){
+      throw new ApiError(400, "Employee ID is required");
+    }
 
-  private static async scheduleMeetup(req: Request, res: Response) {}
+    const data = req.files;
+    
+    if (!data) {
+      throw new ApiError(400, "Data is required");
+    }
 
-  private static async attendance(req: Request, res: Response) {}
+    // send email to HR team with data attached
+    EmitEvents.createEvent(SEND_EMAIL, {message:"Employee Data", email:"HR_email", req:req.files}, PRIORITY.OK)
+    return res.status(200).json(new ApiResponse(200, {username:req.user.username},"Data sharing initialized"))
+  }
 
-  private static async readonlyTeams(req: Request, res: Response) {}
+  private static async attendance(req: Request, res: Response) {
+    const { employeeId } = req.params;
+    
+    if (!req.user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+    
+    if(!employeeId || employeeId === undefined){
+      throw new ApiError(400, "Employee ID is required");
+    }
+
+    // can add a model to log attendence 
+    return res.status(200).json(new ApiResponse(200, {isPresent:true},"Attendence marked"))
+
+  }
 
   private static async shareData(req: Request, res: Response) {
      const file = req.files
@@ -268,9 +297,30 @@ class Employees {
       throw new ApiError(400, "Data is not provided")
      }
 
-     const {email} = req.user?.email
+     if(!req.user){
+       throw new ApiError(401, "Unauthorized")
+     }
+     const user = await prisma.employee.findFirst({
+       where: { id: req.user.id },
+     })
 
+     if(!user){
+       throw new ApiError(404, "User not found")
+     }
+     // send email to HR team with data attached
+     EmitEvents.createEvent(SEND_EMAIL, {message:"Employee Data", email:"HR_email", req:req.files}, PRIORITY.OK)
+     return res.status(200).json(new ApiResponse(200, {username:req.user.username},"Data shared successfully"))
      
   }
+
+  static addNewEmp = Employees.newEmpl
+  static EmpUp = Employees.updateEmpl
+  static removeEmp = Employees.removeEmploy
+  static getEmp = Employees.getEmploy
+  static helpReq = Employees.employHelpReq
+  static getReports = Employees.getReport
+  static sendReports = Employees.sendReport
+  static markAttendance = Employees.attendance
+  static DataSharing = Employees.shareData;
 }
 export { Employees };

@@ -3,6 +3,7 @@ import { EventData } from '../types/scriptInterfaces'; // Import EventData inter
 import { sendEmail } from './emailHandler'; // Import the sendEmail function
 import { EMAIL_FAILED, EMAIL_VERIFY, OK_EMAIL_SENT } from '../constant';
 import logger from './logger';
+import prisma from '../helper/clientPrism';
 class EventHandler {
   constructor() {
     // Register handlers for events
@@ -38,6 +39,26 @@ class EventHandler {
        logger.error(`Error sending email: ${error}`);
       EmitEvents.createEvent(EMAIL_FAILED, data); // Emit failure event
     }
+  }
+
+  private handleNotification(data: EventData) {
+    // Implement notification logic here
+    console.log(`Sending notification to ${data.email}: ${data.message}`);
+  }
+
+  private handlePaymentEvents(data: EventData) {
+    // Implement payment event handling logic here
+    console.log(`Processing payment event for ${data.email}: ${data.message}`);
+  }
+
+  private handleOtherEvents(data: EventData) {
+    // Implement other event handling logic here
+    console.log(`Processing other event for ${data.email}: ${data.message}`);
+  }
+
+  private handleUnkownEvents(data:any){
+    // Implement unknown event handling logic here
+    console.log(`Unknown event received: ${JSON.stringify(data)}`);
   }
 }
 

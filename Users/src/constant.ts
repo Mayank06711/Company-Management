@@ -6,6 +6,7 @@ const EMAIL_RESEND: string = "EMAIL_RESEND";
 const NOTIFICATION: string = "NOTIFICATION";
 const NOTIFICATION_SUCCESS: string = "NOTIFICATION_SUCCESS";
 const OK: string = "OK";
+const SEND_EMAIL: string = "SEND_EMAIL";
 const FAILED: string = "FAILED";
 const CREATE: string = "CREATE";
 const CREATED: string = "CREATED";
@@ -63,6 +64,7 @@ export {
     ADMIN,
     ONLY_ADMIN,
     UNKNOWN,
+    SEND_EMAIL,
     PRIORITY
 }
 
