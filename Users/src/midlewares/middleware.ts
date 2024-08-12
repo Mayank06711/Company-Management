@@ -7,7 +7,6 @@ import {v4 as uuid} from "uuid"
 import multer from "multer"
 import { v2 as cloudinary } from "cloudinary"
 import prisma from "../helper/clientPrism";
-import { User } from "@prisma/client";
 import { ApiError } from "../utils/apiError";
 import AsyncHandler from "../utils/asyncHandler";
 

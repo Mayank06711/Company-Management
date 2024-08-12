@@ -111,39 +111,39 @@ class middleware {
 
 
 
-private static async verifyJWT(req: newRequest, res: Response, next: NextFunction) {
-    try {
-        let accessToken = req.cookies.accessToken || req.headers.authorization?.replace("Bearer ", "");
+// private static async verifyJWT(req: newRequest, res: Response, next: NextFunction) {
+//     try {
+//         let accessToken = req.cookies.accessToken || req.headers.authorization?.replace("Bearer ", "");
 
-        if (!accessToken) {
-            throw new ApiError (401 , "no access token provided");
-            // or: throw new Error('No access token provided');
-        }
+//         if (!accessToken) {
+//             throw new ApiError (401 , "no access token provided");
+//             // or: throw new Error('No access token provided');
+//         }
 
-        const decodedToken = JWT.verify(accessToken, process.env.ACCESS_TOKEN_SECRET)
-        const user = await prisma.user.findFirst({
-            where: { id: decodedToken.id },
-            select: {
-                isMFAEnabled: true,
-                active: true,
-                username: true,
-                role: true,
-            },
-        });
+//         const decodedToken = JWT.verify(accessToken, process.env.ACCESS_TOKEN_SECRET)
+//         const user = await prisma.user.findFirst({
+//             where: { id: decodedToken.id },
+//             select: {
+//                 isMFAEnabled: true,
+//                 active: true,
+//                 username: true,
+//                 role: true,
+//             },
+//         });
 
-        if (!user) {
-            throw new ApiError (404 , "user not found");
-            // or: throw new Error('User not found');
-        }
+//         if (!user) {
+//             throw new ApiError (404 , "user not found");
+//             // or: throw new Error('User not found');
+//         }
 
-        req.user = user;
-        next();
-    } catch (error) {
-        console.error('Error in verifyJWT:', error);
-        throw new ApiError (401 , "invalid token");
-        // or: next(error);
-    }
-}
+//         req.user = user;
+//         next();
+//     } catch (error) {
+//         console.error('Error in verifyJWT:', error);
+//         throw new ApiError (401 , "invalid token");
+//         // or: next(error);
+//     }
+// }
 
 
 

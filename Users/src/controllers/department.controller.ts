@@ -20,8 +20,7 @@ class DepartmentService{
         // Validate the department data
         if (!parsedDepartment.success) {
             return res.status(400).json({ msg: "Invalid department data", errors: parsedDepartment.error.errors });
-        }
-    
+        }    
         try {
             const newDepartment = await prisma.department.create({
                 data: parsedDepartment.data,
@@ -71,6 +70,8 @@ class DepartmentService{
             return res.status(500).json({ msg: "Internal server error", error: error.message });
         }
     }
+
+    
     
 
 

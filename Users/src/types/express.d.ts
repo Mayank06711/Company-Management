@@ -134,6 +134,10 @@ declare global{
     }
   }
 
-export {newRequest}
+  interface asRequest extends Request {
+    user?: Document & IUser;
+  }
+
+export {newRequest , asRequest}
 
 
