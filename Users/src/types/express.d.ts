@@ -24,21 +24,22 @@ interface User {
   employee?: Employee[];
 }
   
-  interface Employee {
-    id: string;  // mapped to MongoDB ObjectId
-    phoneNum: number;
-    positionDesc?: string;
-    departmentId: string;  // mapped to MongoDB ObjectId
-    joinedAt: Date;
-    salary: number;
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    userId: string;  // mapped to MongoDB ObjectId
-    user: User;
-    positionId: string;  // mapped to MongoDB ObjectId
-    position: Position;
-  }
+interface Employee {
+  id: string;  // mapped to MongoDB ObjectId
+  phoneNum: number;
+  positionDesc: string;
+  departmentId: string;  // mapped to MongoDB ObjectId
+  joinedAt: Date;
+  salary: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;  // mapped to MongoDB ObjectId
+  user: User;
+  projectId?: string;  // Optional
+  positionId: string;  // mapped to MongoDB ObjectId
+  position: Position;
+}
   
   interface Department {
     id: string;  // mapped to MongoDB ObjectId

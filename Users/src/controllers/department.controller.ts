@@ -12,12 +12,12 @@ class DepartmentService{
     private static async newDepartment(req: newRequest, res: Response) {
         const parsedDepartment = DepartmentSchema.safeParse(req.body);
     
-        // Check user role
+        
         if (req.user?.role !== "Director" && req.user?.role !== "CEO") {
             return res.status(403).json({ msg: "You are not eligible" });
         }
     
-        // Validate the department data
+       
         if (!parsedDepartment.success) {
             return res.status(400).json({ msg: "Invalid department data", errors: parsedDepartment.error.errors });
         }    
@@ -37,15 +37,15 @@ class DepartmentService{
     
 
     private static async updateDepartment(req: newRequest, res: Response) {
-        const { id } = req.params; // Get the department ID from the request parameters
-        const parsedDepartment = DepartmentSchema.safeParse(req.body); // Validate incoming data
+        const { id } = req.params; 
+        const parsedDepartment = DepartmentSchema.safeParse(req.body); 
     
-        // Check user role
+        
         if (req.user?.role !== "Director" && req.user?.role !== "CEO") {
             return res.status(403).json({ msg: "You are not eligible" });
         }
     
-        // Validate the department data
+        
         if (!parsedDepartment.success) {
             return res.status(400).json({ msg: "Invalid department data", errors: parsedDepartment.error.errors });
         }
@@ -63,7 +63,7 @@ class DepartmentService{
             return res.status(200).json({ msg: "Department updated successfully", department: updatedDepartment });
 
         } catch (error:any) {
-            if (error.code === 'P2002') { // Unique constraint violation
+            if (error.code === 'P2002') { 
                 return res.status(409).json({ msg: "Department name must be unique", error: error.message });
             }
             console.error("Error updating department:", error);
@@ -76,22 +76,22 @@ class DepartmentService{
 
 
     private static async deleteDepartment(req:Request , res: Response) {
-        const { id } = req.params; // Get the department ID from the request parameters
+        const { id } = req.params; 
     
-        // Check user role
+        
         if (req.user?.role !== "Director" && req.user?.role !== "CEO") {
             return res.status(403).json({ msg: "You are not eligible" });
         }
     
         try {
-            // Delete the department from the database
+           
             const deletedDepartment = await prisma.department.delete({
-                where: { id }, // Find the department by ID
+                where: { id }, 
             });
     
             return res.status(200).json({ msg: "Department deleted successfully", department: deletedDepartment });
         } catch (error :any) {
-            if (error.code === 'P2025') { // Record not found
+            if (error.code === 'P2025') { 
                 return res.status(404).json({ msg: "Department not found", error: error.message });
             }
             console.error("Error deleting department:", error);

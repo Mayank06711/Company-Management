@@ -7,56 +7,89 @@ import { EmployeeSchema } from "../models/zodValidation.schemas";
 import { AuthServices } from "../helper/auth";
 import UserService from "./user.controller";
 import {newRequest} from "../types/express"
-
+const roles =  ["HR" , "CEO" , "DIRECOR" ]
 
 class Employees {
-    private static async createEmployee(req: Request, res: Response): Promise<void> {
-        const validationResult = EmployeeSchema.safeParse(req.body);
+  private static async createEmployee(req: newRequest, res: Response): Promise<void> {
+
+     if(!roles.includes(req.user.role) ){{
+      throw new ApiError(401 , "You cannot create Employee")
+     }}
+    const validationResult = EmployeeSchema.safeParse(req.body);
     
-        if (!validationResult.success) {
-            throw new ApiError(400 , `${validationResult.error.errors}`);
-        }
-    
-        const {
-          phoneNum,
-          positionDesc,
-          departmentId,
-          joinedAt,
-          salary,
-          isActive,
-          userId,
-          positionId,
-          projectId,
-        } = validationResult.data;
-    
-        const newEmployee = await prisma.employee.create({
-          data: {
-            phoneNum,
-            positionDesc,
-            departmentId,
-            joinedAt: joinedAt ? new Date(joinedAt) : undefined,
-            salary,
-            isActive,
-            userId,
-            positionId,
-            projectId,
-          },
-        });
-    
-        res.status(201).json(newEmployee);
-      }
-    
-    
-    private static async updateEmpl(req:Request, res:Response){
-        
+    if (!validationResult.success) {
+      throw new ApiError(400, `${validationResult.error.errors}`);
+    }
+    const Employee = await prisma.user.findFirst({
+      where:{
+          username: validationResult.data.userId,
+      },
+  })
+  if(Employee){
+      throw new ApiError(400, "Employee already exists");
+  }
+
+   
+    const newEmployee = await prisma.employee.create({
+      data :req.body
+    });
+
+    if(!newEmployee){
+      throw new ApiError(400 , "Employee Creation Failed");
     }
 
-    private static async promoteEmploy(req:Request, res:Response){
-        
+    res.status(201).json(newEmployee);
+  }
+    
+    
+    private static async updateEmplSalary(req:newRequest, res:Response){
+      if(!roles.includes(req.user.role) ){{
+        throw new ApiError(401 , "You cannot update Employee")
+       }}
+
+      const update = req.body;
+      
+      const updateUser = await prisma.employee.update({
+        where:{ 
+             id: req.body?.id
+     },
+        data:{
+          salary:update.salary
+        }
+     });
+    if(updateUser){
+        throw new ApiError(400, "Failed updating salary");
+    }
+  
+      res.status(201).json(updateUser);;
+    }
+
+    private static async promoteEmploy(req:newRequest, res:Response){
+      if(!roles.includes(req.user.role) ){{
+        throw new ApiError(401 , "You cannot promote Employee")
+       }}
+
+       const{ position , positionDesc}= req.body;
+       const updateUser = await prisma.employee.update({
+        where:{ 
+             id: req.body?.id
+     },
+        data:{
+          position,
+          positionDesc
+        }
+     })
+
+    if(!updateUser){
+      throw new ApiError(401 , "Failed to update position");
+    } 
+
+    res.status(200).json((updateUser));
+
     }
     
     private static async removeEmploy(req:Request, res:Response){
-
+      
     }
 
     private static async getEmploy(req:Request, res:Response){
@@ -103,6 +136,7 @@ class Employees {
 
     }
 
-    
+    static newEmployee  = this.createEmployee;
+    static UpdateSalary = this.updateEmplSalary
 }
 export {Employees}
