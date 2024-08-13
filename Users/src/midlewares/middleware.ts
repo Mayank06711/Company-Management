@@ -9,6 +9,8 @@ import { v2 as cloudinary } from "cloudinary"
 import prisma from "../helper/clientPrism";
 import { ApiError } from "../utils/apiError";
 import AsyncHandler from "../utils/asyncHandler";
+import fs from "fs";
+import path from 'path';
 
 
 
@@ -18,7 +20,25 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET 
 })
 
-console.log(process.env.CLOUDINARY_API_KEY, "cloudinary API key: ")
+// console.log(process.env.CLOUDINARY_API_KEY, "cloudinary API key: ")
+function getFormattedDate() {
+  const now = new Date();
+  return `${now.getFullYear()}-${(now.getMonth() + 1)
+    .toString()
+    .padStart(2, '0')}-${now
+    .getDate()
+    .toString()
+    .padStart(2, '0')} ${now
+    .getHours()
+    .toString()
+    .padStart(2, '0')}:${now
+    .getMinutes()
+    .toString()
+    .padStart(2, '0')}:${now
+    .getSeconds()
+    .toString()
+    .padStart(2, '0')}`;
+}
 class middleware {
     
     // Multer middleware method for single and multiple files
@@ -199,6 +219,19 @@ class middleware {
         const statusCode = err.statusCode || 500
 
         console.error(`Error: ${err}`); // apierror
+        
+         // Log the error to a file with a timestamp
+         const logMessage = `${getFormattedDate()} - Error: ${err.message}\n${
+         err.stack
+        }\npathname: ${req.path} statusCode: ${statusCode} \n\n`;
+        const logFilePath = path.join(__dirname, '../../logs', 'error.log');
+
+         // Ensure the logs directory exists
+        fs.mkdirSync(path.dirname(logFilePath), { recursive: true });
+        //Create the logs directory if it does not exist, using recursive: true to ensure all parent directories are created as well
+         // Append the error log to the file
+        fs.appendFileSync(logFilePath, logMessage);
+
         res.status(statusCode).json({ 
             sucess:false,
             message:err.message
