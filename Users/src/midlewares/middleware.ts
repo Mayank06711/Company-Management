@@ -1,24 +1,22 @@
-import {Request, Response, NextFunction } from "express";
+import {Request ,Response, NextFunction } from "express";
+import {newRequest} from "../types/express"
 import JWT from "jsonwebtoken"
+import {JwtPayload} from "jsonwebtoken"
 import bcrypt from "bcrypt"
 import {v4 as uuid} from "uuid"
 import multer from "multer"
-import  {v2 as cloudinary } from "cloudinary"
-import AsyncHandler from "../utils/asyncHandler"
+import { v2 as cloudinary } from "cloudinary"
 import prisma from "../helper/clientPrism";
 import { ApiError } from "../utils/apiError";
-import { newRequest } from "../types/express";
-
- 
-
+import AsyncHandler from "../utils/asyncHandler";
 
 
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET 
+})
 
 console.log(process.env.CLOUDINARY_API_KEY, "cloudinary API key: ")
 class middleware {
@@ -29,9 +27,10 @@ class middleware {
           fileSize: 1024 * 1024 * 5, // 5mb
         },
     }); //  by default it will use our ram memory  to store files in buffer format  as we have not provided any location to store files
+    
     private static singleFile = middleware.multerUpload.array("avatar", 1)
     private static attachmentsMulter = middleware.multerUpload.array("arrayFiles", 5)
-     
+    
     private static getBase64 = (file:any) =>`data:${file[0].mimetype};base64,${file[0].buffer.toString("base64")}`
     private static async uploadFilesToCloudinary(files: any[] = []){  
       if (!files || files.length === 0) {
@@ -73,132 +72,85 @@ class middleware {
             throw new Error("Error uploading files to cloudinary");
           }
     }
-    // auth middleware method
-    // private static async verifyJWT(req: Request, res: Response, next: NextFunction) {
-    //     const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")[0]; // Extract the access token from cookies or headers
+
+    private static async verify_JWT(req: Request, res: Response, next: NextFunction) {
+        const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")[0]; // Extract the access token from cookies or headers
     
-    //     if (!accessToken) {
-    //         // Handle error if access token is missing
-    //         // Typically, you would return an error response or call the 'next' function with an error
-    //         // For example: return res.status(401).json({ message: 'No access token provided' });
-    //         // Or: return next(new Error('No access token provided'));
-    //     }
+        if (!accessToken || accessToken.length === 0) {
+            throw new ApiError(401, "Invalid Access Token")
+        }
+        let decodedToken:string|JwtPayload = JWT.verify(accessToken, process.env.ACCESS_TOKEN_SECRET!); // Verify and decode the access token
+        
+        if(typeof decodedToken === "string"){
+          throw new ApiError(401, "Invalid Access Token")
+        }
+        const user = await prisma.user.findFirst({
+            where: {
+              OR:[
+                {username: decodedToken.username},
+                {id: decodedToken.id}
+              ]
+            },
+            select: {
+                id:true,
+                email:true,
+                isMFAEnabled: true, // Include the user's MFA status in the response
+                active: true, // Include whether the user is active
+                username: true, // Include the username
+                role: true, // Include the user's role
+            },
+        });
     
-    //     const decodedToken = JWT.verify(accessToken, process.env.ACCESS_TOKEN_SECRET); // Verify and decode the access token
+        if (!user) {
+           throw new ApiError(401, "Invalid access Token")
+        }
     
+        req.user = {id:user.id, role:user.role, username:user.username, isMFAEnabled:user.isMFAEnabled, email: user.email, active:user.active};
+        next(); // Call the next middleware function or route handler
+    } 
+
+
+    // private static async verifyMFA(MFASecretKey: string, id: string) {
     //     const user = await prisma.user.findFirst({
-    //         where: {
-    //             id: decodedToken?.id, // Find the user based on the decoded token's ID
+    //         where:{
+    //             id: id, // if not work try adding+
+    //             isMFAEnabled: true,
     //         },
     //         select: {
-    //             isMFAEnabled: true, // Include the user's MFA status in the response
-    //             active: true, // Include whether the user is active
-    //             username: true, // Include the username
-    //             role: true, // Include the user's role
+    //             MFASecretKey: true
     //         },
     //     });
-    
-    //     if (!user) {
-    //         // Handle error if user is not found based on the decoded token
-    //         // Typically, you would return an error response or call the 'next' function with an error
-    //         // For example: return res.status(404).json({ message: 'User not found' });
-    //         // Or: return next(new Error('User not found'));
+    //     if(!user){
+    //         return false
     //     }
-    
-    //     req.user = user; // Attach the user object to the request object for further use in the route handler
-    //     next(); // Call the next middleware function or route handler
-    // } // it is a private method
+    //    // Compare the provided MFASecretKey with the stored one
+    //     const verified = await bcrypt.compare(MFASecretKey, user.MFASecretKey);
+
+    //     return verified;
+    // }
+
+    // private static async isMFAEnabled(req:Request, res:Response, next:NextFunction):Promise<void>{ // we may have to remove promise any
+    //     if (!req.user?.isMFAEnabled) {
+    //     next()
+    //     }
+    //     else {
+    //         const { MFASecretKey } = req.body
+    //         if(!MFASecretKey){
+    //             res.status(401).json({message: "Two-factor authentication (MFA) is required"})
+    //             return;
+    //         }
+    //         const isValid = await middleware.verifyMFA(MFASecretKey, req.user.id);
+    //         if(isValid){
+    //             next()
+    //         }
+    //         else {
+    //             res.status(401).json({message: "Invalid two-factor authentication (MFA) code"})
+    //         }
+    //     }
+    // }
 
 
 
-// private static async verifyJWT(req: newRequest, res: Response, next: NextFunction) {
-//     try {
-//         let accessToken = req.cookies.accessToken || req.headers.authorization?.replace("Bearer ", "");
-
-//         if (!accessToken) {
-//             throw new ApiError (401 , "no access token provided");
-//             // or: throw new Error('No access token provided');
-//         }
-
-//         const decodedToken = JWT.verify(accessToken, process.env.ACCESS_TOKEN_SECRET)
-//         const user = await prisma.user.findFirst({
-//             where: { id: decodedToken.id },
-//             select: {
-//                 isMFAEnabled: true,
-//                 active: true,
-//                 username: true,
-//                 role: true,
-//             },
-//         });
-
-//         if (!user) {
-//             throw new ApiError (404 , "user not found");
-//             // or: throw new Error('User not found');
-//         }
-
-//         req.user = user;
-//         next();
-//     } catch (error) {
-//         console.error('Error in verifyJWT:', error);
-//         throw new ApiError (401 , "invalid token");
-//         // or: next(error);
-//     }
-// }
-
-
-
-
-    private static async verifyMFA(MFASecretKey: string, id: string) {
-      const user = await prisma.user.findFirst({
-          where: {
-              id: id,
-              isMFAEnabled: true,
-          },
-          select: {
-              MFASecretKey: true,
-          },
-      });
-  
-      // If user is null or MFASecretKey is not defined, return false
-      if (!user || !user.MFASecretKey) {
-          return false;
-      }
-  
-      // Compare the provided MFASecretKey with the stored one
-      const verified = await bcrypt.compare(MFASecretKey, user.MFASecretKey);
-  
-      return verified;
-  }
-
-
-
-
-
-
-
-
-    private static async isMFAEnabled(req:newRequest, res:Response, next:NextFunction):Promise<void>{ // we may have to remove promise any
-        if (!req.user?.isMFAEnabled) {
-        next()
-        }
-        else {
-            const { MFASecretKey } = req.body
-            if(!MFASecretKey){
-                res.status(401).json({message: "Two-factor authentication (MFA) is required"})
-                return;
-            }
-            const isValid = await middleware.verifyMFA(MFASecretKey, req.user.id);
-            if(isValid){
-                next()
-            }
-            else {
-                res.status(401).json({message: "Invalid two-factor authentication (MFA) code"})
-            }
-        }
-    }
-
-
-    // chech if admin or not
     // private static isAdmin(req:Request, res:Response, next:NextFunction) {
     //     const {role} = req.user.role;
     //     const originalUrl = req.originalUrl
@@ -212,7 +164,7 @@ class middleware {
     //     }
     // }
 
-    // check if payment request
+  
     // private static isPayment(req:Request, res:Response, next:NextFunction) {
     //     const protocol = req.protocol // http or htttps
     //     const hostname = req.hostname
@@ -228,7 +180,20 @@ class middleware {
     //     }
     // }
 
-    // for all error
+      private static  Active(req:Request, res:Response, next:NextFunction){
+        if (req.user?.active) {
+            // console.log(req.user.active, "i am loggin in")
+            next()
+        } else {
+          // console.log(req, "i am loggin in")
+            //  return res.status(401).json({ message: "You are not authorized to access this resource" });
+            throw new ApiError(401, "You are not authorized to access this resource")
+        }
+      }
+
+    
+   
+   
     private static errorMiddleware(err:any, req:Request, res:Response, next:NextFunction) {
         err.message ||= "Internal Server Error, please try again later"
         const statusCode = err.statusCode || 500
@@ -245,7 +210,8 @@ class middleware {
     static SingleFile = middleware.singleFile;
     static AttachmentsMulter = middleware.attachmentsMulter;
     static UploadFilesToCloudinary = middleware.uploadFilesToCloudinary;
-    // static VerifyJWT = AsyncHandler.wrap(middleware.verifyJWT);
+    static VerifyJWT =  AsyncHandler.wrap(middleware.verify_JWT);
+    static isActive  = middleware.Active;
     // static IsMFAEnabled = AsyncHandler.wrap(middleware.isMFAEnabled);
     // static IsAdmin = AsyncHandler.wrap(middleware.isAdmin);
     // static IsPayment = AsyncHandler.wrap(middleware.isPayment);

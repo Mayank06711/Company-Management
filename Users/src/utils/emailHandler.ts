@@ -1,24 +1,25 @@
-import nodemailer from "nodemailer"
+import  nodemailer from "nodemailer"
+import SMTPTransport  from "nodemailer"
 import { ApiError } from "./apiError"
 import { EmailOptions } from "../types/scriptInterfaces"
-import EventEmitter  from "../utils/eventEmitter"
 
 const sendEmail = async(option:EmailOptions)=>{
     // create a transporter
      try {
-          const transporter = nodemailer.createTransport({
-              host:process.env.EMAIL_HOSTNAME,
-              port: process.env.EMAIL_PORT,
+
+           const transporter = nodemailer.createTransport({
+              host: process.env.EMAIL_HOSTNAME!,
+              port: process.env.EMAIL_PORT!,
               secure: false, // true for 465, false for other ports
               auth: {
-                  user: process.env.EMAIL_USERNAME, // generated ethereal user
-                  pass:  process.env.EMAIL_USERNAME_PASSWORD, // generated ethereal password
+                  user: process.env.EMAIL_USERNAME!, // generated ethereal user
+                  pass:  process.env.EMAIL_USERNAME_PASSWORD!, // generated ethereal password
               },
-          });
+          } as any);
       
-          //DEfine email options
+          //Define email options
           const emailOption = {
-              from:"BlogMini support<support@blogmini.com>",
+              from:"XYZ-PVT.LMT support<support@xyz.com>",
               to:option.email,
               subject:option.subject,
               text:option.message,

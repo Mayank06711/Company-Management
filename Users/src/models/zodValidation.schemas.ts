@@ -10,13 +10,18 @@ import {z} from "zod"
   });
   
 
+  
+
   const EmployeeSchema = z.object({
-    phoneNum: z.number().int().positive().min(1000000000, "Phone number must be a valid 10-digit number").optional(),
+    phoneNum: z.string().length(10, "Phone number must be 10 digits"),
     positionDesc: z.string().optional(),
-    departmentId: z.string().optional(),
-    salary: z.number().int().min(0, "Salary must be a non-negative integer").optional(),
-    userId: z.string().optional(),
-    positionId: z.string().optional(),
+    departmentId: z.string().nonempty("Department ID is required"),
+    joinedAt: z.string().datetime().optional(),
+    salary: z.number().int().positive("Salary must be a positive integer"),
+    isActive: z.boolean().default(false),
+    userId: z.string().nonempty("User ID is required"),
+    positionId: z.string().nonempty("Position ID is required"),
+    projectId: z.string().optional(),
   });
 
 

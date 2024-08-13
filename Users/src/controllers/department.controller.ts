@@ -2,14 +2,14 @@ import {Request, Response, NextFunction} from "express"
 import prisma from "../helper/clientPrism"
 import { DepartmentSchema } from "../models/zodValidation.schemas"
 import asyncHandler from "../utils/asyncHandler"
-
+import { newRequest } from "../types/express"
 
 
 
 class DepartmentService{
 
 
-    private static async newDepartment(req: Request, res: Response) {
+    private static async newDepartment(req: newRequest, res: Response) {
         const parsedDepartment = DepartmentSchema.safeParse(req.body);
     
         // Check user role
@@ -20,22 +20,23 @@ class DepartmentService{
         // Validate the department data
         if (!parsedDepartment.success) {
             return res.status(400).json({ msg: "Invalid department data", errors: parsedDepartment.error.errors });
-        }
-    
+        }    
         try {
             const newDepartment = await prisma.department.create({
                 data: parsedDepartment.data,
             });
     
             return res.status(201).json({ msg: "Department created successfully", department: newDepartment });
-        } catch (error) {
+
+        } 
+        catch (error:any) {
             console.error("Error creating department:", error);
             return res.status(500).json({ msg: "Internal server error", error: error.message });
         }
     }
     
 
-    private static async updateDepartment(req: Request, res: Response) {
+    private static async updateDepartment(req: newRequest, res: Response) {
         const { id } = req.params; // Get the department ID from the request parameters
         const parsedDepartment = DepartmentSchema.safeParse(req.body); // Validate incoming data
     
@@ -60,7 +61,8 @@ class DepartmentService{
             });
     
             return res.status(200).json({ msg: "Department updated successfully", department: updatedDepartment });
-        } catch (error) {
+
+        } catch (error:any) {
             if (error.code === 'P2002') { // Unique constraint violation
                 return res.status(409).json({ msg: "Department name must be unique", error: error.message });
             }
@@ -68,9 +70,12 @@ class DepartmentService{
             return res.status(500).json({ msg: "Internal server error", error: error.message });
         }
     }
+
+    
     
 
-    private static async deleteDepartment(req: Request , res: Response) {
+
+    private static async deleteDepartment(req:Request , res: Response) {
         const { id } = req.params; // Get the department ID from the request parameters
     
         // Check user role
@@ -95,7 +100,7 @@ class DepartmentService{
     }
     
 
-   static registerDepartment = asyncHandler.wrap(DepartmentService.newDepartment)
+   static registerDepartment = DepartmentService.newDepartment;
 }
 
-export default DepartmentServices;
+export default DepartmentService;
