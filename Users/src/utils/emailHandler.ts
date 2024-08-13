@@ -1,9 +1,7 @@
-import nodemailer from "nodemailer"
 import  nodemailer from "nodemailer"
 import SMTPTransport  from "nodemailer"
 import { ApiError } from "./apiError"
 import { EmailOptions } from "../types/scriptInterfaces"
-import EventEmitter  from "../utils/eventEmitter"
 
 const sendEmail = async(option:EmailOptions)=>{
     // create a transporter
@@ -17,7 +15,7 @@ const sendEmail = async(option:EmailOptions)=>{
                   user: process.env.EMAIL_USERNAME!, // generated ethereal user
                   pass:  process.env.EMAIL_USERNAME_PASSWORD!, // generated ethereal password
               },
-          } as SMTPTransport.Options);
+          } as any);
       
           //Define email options
           const emailOption = {

@@ -7,7 +7,7 @@ const prisma = new PrismaClient({
 
 
 
-prisma.$use(async (params, next)=>{
+prisma.$use(async (params:any, next:any)=>{
     if(params.model === "User"){
         if(params.action === "create" || params.action === "update"){
             const user = params.args.data;
