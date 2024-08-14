@@ -10,6 +10,7 @@ import DepartmentService from "./department.controller";
 import { newRequest } from "../types/express";
 import EmitEvents from "../utils/eventEmitter";
 import { PRIORITY, SEND_EMAIL } from "../constant";
+import { EventData } from "../types/scriptInterfaces";
 
 
 class Employees {
@@ -174,6 +175,11 @@ class Employees {
       throw new ApiError(403, "You are not allowed to remove employee data");
     }
 
+    const employee = await prisma.employee.findFirst({
+      where: { id: employeeId},
+      include: { user: true },
+    });
+
     const result = await prisma.employee.update({
       where: { id: employeeId },
       data: { isActive: false },
@@ -182,7 +188,15 @@ class Employees {
     if (!result) {
       throw new ApiError(500, "Failed to remove employee data in our database");
     }
+
+    const data:EventData = {
+      email: employee?.user?.email,
+      subject: "Employee Removed",
+      message: `Your employee with ID: ${employee?.id} has been removed from our system`,
+    }
+
     //send noti to employee
+    EmitEvents.createEvent("Employee-Removed", data, PRIORITY.SOFT_DELETE)
     res
      .status(200)
      .json(new ApiResponse(200, {employeeId}, "Employee removed successfully"));
@@ -300,6 +314,7 @@ class Employees {
      if(!req.user){
        throw new ApiError(401, "Unauthorized")
      }
+
      const user = await prisma.employee.findFirst({
        where: { id: req.user.id },
      })
@@ -308,7 +323,7 @@ class Employees {
        throw new ApiError(404, "User not found")
      }
      // send email to HR team with data attached
-     EmitEvents.createEvent(SEND_EMAIL, {message:"Employee Data", email:"HR_email", req:req.files}, PRIORITY.OK)
+     EmitEvents.createEvent(SEND_EMAIL, {message:"Employee Data", email:"HR_email", req:req.files, data:{user}}, PRIORITY.OK)
      return res.status(200).json(new ApiResponse(200, {username:req.user.username},"Data shared successfully"))
      
   }
