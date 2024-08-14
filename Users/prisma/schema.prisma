@@ -8,6 +8,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
+
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
@@ -87,6 +88,7 @@ model Position {
   employee Employee[] // 1-n
 }
 
+
 enum ProjectStatus {
   Active
   Inactive
@@ -94,6 +96,7 @@ enum ProjectStatus {
   Archieved
   Discarded
 }
+
 
 model Project {
   id          String         @id @default(auto()) @map("_id") @db.ObjectId   // mapping id with mongodb _id 
@@ -119,6 +122,7 @@ enum ApplicantionType {
   Visitor
 }
 
+
 model Applicantion {
   id String @id @default(auto()) @map("_id") @db.ObjectId   // mapping id with mongodb _id 
   phoneNum Int @unique
@@ -130,24 +134,31 @@ model Applicantion {
 }
 
 
-
-
 enum NotificationsState {
   Pending 
   Sent
   Recieved
 }
 
+
+enum Channel {
+  Email
+  SMS
+  Whatsapp
+}
+
+
 model Notifications {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   type String
   message String
   status NotificationsState @default(Pending)
+  channel Channel @default(Email)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Define a field to link to User
-  userId String @db.ObjectId
+  userId String  @unique @db.ObjectId
   user User @relation(fields: [userId], references: [id])
 }
 
