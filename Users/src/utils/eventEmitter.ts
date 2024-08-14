@@ -1,5 +1,4 @@
-import { EventEmitter } from "events"; // Import the EventEmitter class from the 'events' module
-import { sendEmail } from "./emailHandler"; // Import the sendEmail function from the emailHandler module
+import { EventEmitter } from "events"; // Import the EventEmitter class from the 'events' module // Import the sendEmail function from the emailHandler module
 import { EventData, PriorityEvent } from "../types/scriptInterfaces"; // Import EventData and PriorityEvent interfaces
 import { PRIORITY } from "../constant"; // Import PRIORITY constants
 
@@ -24,6 +23,7 @@ class EventQueue {
       retries: 0 // Initialize retries to 0
     };
     
+    if(priority >= 0)
     this.queue.push(event); // Add event to the queue
     // Sort events in the queue by priority (highest priority first)
     this.queue.sort((a, b) => (b.priority || 0) - (a.priority || 0));
@@ -34,12 +34,13 @@ class EventQueue {
   private async processQueue() {
     if (this.isProcessing) return; // Exit if already processing
     this.isProcessing = true; // Set processing flag to true
-
+    console.log(this.queue, "you are seeing the queue")
     // Continue processing while there are events and concurrency limit is not reached
     while (this.queue.length > 0 && this.currentConcurrency < this.concurrencyLimit) {
       const event = this.queue.shift(); // Get the next event from the queue
       if (event) {
         this.currentConcurrency++; // Increment the current concurrency count
+        console.log(this.concurrencyLimit, this.currentConcurrency, "concurrent limit and current concurrency")
         this.processEvent(event) // Process the event
           .finally(() => {
             this.currentConcurrency--; // Decrement concurrency count after processing
@@ -53,10 +54,10 @@ class EventQueue {
 
   // Method to process a single event
   private async processEvent(event: PriorityEvent) {
-    console.log(`Processing event: ${event.name} with priority ${event.priority}`);
+    console.log(`Processing event named: ${event.name} with priority ${event.priority}`);
     
     try {
-      console.log("Processing event")
+      console.log("emmiting  event")
       emitEvent.emit(event.name, event.data); // Emit the event to registered handlers
     } catch (error) {
       // Handle errors that occur during event processing
@@ -110,24 +111,3 @@ const emitEvent = new EmitEvents(); // Create an instance of EmitEvents
 
 export default EmitEvents; // Export the EmitEvents class for external use
 
-// Example usage:
-
-// Define a handler function for an event
-const handleEmailSending = async (data: EventData) => {
-  try {
-    await sendEmail(data); // Call sendEmail with event data
-    console.log(`Email sent with message: ${data.message}`);
-  } catch (error) {
-    // Handle errors during email sending
-    if (typeof error === 'string') {
-      console.log(`Error sending email: ${error}`);
-    } else if (error instanceof Error) {
-      console.log(`Error sending email: ${error.message}`);
-    } else {
-      console.log(`Error sending email: ${error}`);
-    }
-  }
-};
-
-// Register the handler for the "sendEmail" event
-EmitEvents.consumeEvent("sendEmail", handleEmailSending);
