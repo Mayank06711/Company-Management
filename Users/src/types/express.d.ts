@@ -27,7 +27,7 @@ interface User {
   interface Employee {
     id: string;  // mapped to MongoDB ObjectId
     phoneNum: number;
-    positionDesc?: string;
+    positionDesc: string;
     departmentId: string;  // mapped to MongoDB ObjectId
     joinedAt: Date;
     salary: number;
@@ -35,9 +35,8 @@ interface User {
     createdAt: Date;
     updatedAt: Date;
     userId: string;  // mapped to MongoDB ObjectId
-    user: User;
     positionId: string;  // mapped to MongoDB ObjectId
-    position: Position;
+    projectId: string;
   }
   
   interface Department {

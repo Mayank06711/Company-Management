@@ -137,7 +137,7 @@ class DepartmentService{
                     { name:name },
                     {isActive:true}
                 ]
-             },
+            },
         })
         if(!department){
             return res.status(404).json({ msg: "Department not exist or closed" });
@@ -155,6 +155,10 @@ class DepartmentService{
                 ]},
         })
     }
+
+    
+
+
 
    static registerDepartment = DepartmentService.newDepartment;
    static renewDepartment = DepartmentService.updateDepartment;
