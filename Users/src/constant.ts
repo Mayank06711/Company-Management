@@ -22,10 +22,10 @@ const UNKNOWN: string = "UNKNOWN";
 
 // Priority values
 const PRIORITY = {
-  PAYMENT: 18,
-  ADMIN: 17,
-  SOFT_DELETE: 16,
-  EMAIL_VERIFY: 15,
+  PAYMENT: 14,
+  ADMIN: 13,
+  SOFT_DELETE: 12,
+  EMAIL_VERIFY: 11,
   EMAIL_VERIFIED: 10,
   OK_EMAIL_SENT: 9,
   EMAIL_RESEND: 8,
@@ -37,9 +37,7 @@ const PRIORITY = {
   CREATED: 2,
   UPDATE: 1,
   REJECT: 0,
-  ACCEPT: -1,
-  ACCESS_DENIED: -2,
-  ONLY_ADMIN: -3,
+  ACCEPT: 1,
   UNKNOWN: -4,
 };
 
