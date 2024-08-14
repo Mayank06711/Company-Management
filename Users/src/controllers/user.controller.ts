@@ -7,7 +7,6 @@ import {ApiError} from "../utils/apiError"
 import {ApiResponse} from "../utils/apiResponse"
 import asyncHandler from "../utils/asyncHandler"
 import { AuthServices } from "../helper/auth"
-import {sendEmail} from "../utils/emailHandler"
 import {UserSchema, EmployeeSchema, PositionSchema, NotificationsSchema} from "../models/zodValidation.schemas"
 // import {} from "../utils/eventEmitter"
 import { newRequest} from "../types/express"
@@ -65,7 +64,6 @@ class UserService {
         .status(201)
         .json(new ApiResponse(201, formattedResult, "Congratualtion you account is created"))
     }
-
 
     private static async login(req: Request, res:Response){
         // Implementation for logging in a user
@@ -363,6 +361,10 @@ class UserService {
         if(!user){
             throw new ApiError(404, "User not found")
         }
+        if(user.emailVerified){
+            return res.status(200).json(new ApiResponse(200, user.id, "Already verified"))
+        }
+        
         const timestamp = Date.now().toString();
         // const token = AuthServices.customToken(18, user.email as string, timestamp as string);
         // const token = AuthServices.randomToken(18, user.email, timestamp as string)
@@ -374,56 +376,127 @@ class UserService {
         const emailOption = {
             email: user.email,
             subject: "Email Verification",
-            message: `Click the link below to verify your email address which is valid only for 10 minutes \n \n \n${verificaonUrl}\n \n \n \n  If you did not requested this please ignore this email, or can complain at  support@xyz.com`
+            data:{url:verificaonUrl},
+            message: `Click the link below to verify your email address which is valid only for 10 minutes  \n \n  If you did not requested this please ignore this email, or can complain at  support@xyz.com`
         }
         EmitEvents.createEvent(EMAIL_VERIFY, emailOption, PRIORITY.EMAIL_VERIFY)
         return res.status(200).json(new ApiResponse(200, user.id, "Verification email process started"))
     }
 
+    // private static async verifyEmail(req: Request, res: Response) {
+    //     // Implementation for verifying a verification email
+    //     const { token, email, timestamp } = req.query;
+    //     console.log(email, token, timestamp)
+    //     if (!token || typeof token !== 'string') {
+    //         return res.status(400).send('<html><body><h1 style="color: red;">Invalid verification link: Token is missing</h1></body></html>');
+    //     }
+    
+    //     if (!email || typeof email !== 'string') {
+    //         return res.status(400).send('<html><body><h1 style="color: red;">Invalid verification link: Email is missing or invalid</h1></body></html>');
+    //     }
+    
+    //     if (!timestamp || typeof timestamp !== 'string') {
+    //         return res.status(400).send('<html><body><h1 style="color: red;">Invalid verification link: Timestamp is missing</h1></body></html>');
+    //     }
+    
+    //     const currentTime = Date.now().toString();
+    //     const timeDifference = Math.abs(Number(currentTime) - Number(timestamp));
+    //     const tenMinutesInMilliseconds = 10 * 60 * 1000;
+        
+    //     //console.log(timeDifference, timestamp,  currentTime, tenMinutesInMilliseconds)
+    //     if (timeDifference > tenMinutesInMilliseconds) {
+    //         return res.status(400).send('<html><body><h1 style="color: red;">Token has expired</h1></body></html>');
+    //     }
+    
+    //     // const orginaltoken =AuthServices.randomToken(18, email, timestamp)
+    //     //const originalToken = AuthServices.customToken(18, email as string, timestamp as string);
+    //     const originalToken = AuthServices.generateDeterministicToken(email, timestamp)
+    //     console.log(originalToken , " orginaltoken vs token", token )
+       
+    //     if (token !== originalToken) {
+    //         return res.status(400).send('<html><body><h1 style="color: red;">Invalid token</h1></body></html>');
+    //     }
+
+    //     // we can change flag of verified to true here
+    //     const user = await prisma.user.update({
+    //         where:{
+    //             email:email,
+    //         },
+    //         data:{
+    //             emailVerified: true,
+    //         }
+    //     })
+    //     res.status(200).send('<html><body><h1 style="color: green;">Email Verified Successfully</h1></body></html>');
+    // }
+    
     private static async verifyEmail(req: Request, res: Response) {
-        // Implementation for verifying a verification email
         const { token, email, timestamp } = req.query;
-        console.log(email, token, timestamp)
-        if (!token || typeof token !== 'string') {
-            return res.status(400).send('<html><body><h1 style="color: red;">Invalid verification link: Token is missing</h1></body></html>');
-        }
     
-        if (!email || typeof email !== 'string') {
-            return res.status(400).send('<html><body><h1 style="color: red;">Invalid verification link: Email is missing or invalid</h1></body></html>');
-        }
-    
-        if (!timestamp || typeof timestamp !== 'string') {
-            return res.status(400).send('<html><body><h1 style="color: red;">Invalid verification link: Timestamp is missing</h1></body></html>');
+        if (!token || typeof token !== 'string' || !email || typeof email !== 'string' || !timestamp || typeof timestamp !== 'string') {
+            return res.status(400).send('<html><body><h1 style="color: red;">Invalid verification link: Missing or invalid parameters</h1></body></html>');
         }
     
         const currentTime = Date.now().toString();
         const timeDifference = Math.abs(Number(currentTime) - Number(timestamp));
         const tenMinutesInMilliseconds = 10 * 60 * 1000;
-        
-        //console.log(timeDifference, timestamp,  currentTime, tenMinutesInMilliseconds)
+    
         if (timeDifference > tenMinutesInMilliseconds) {
             return res.status(400).send('<html><body><h1 style="color: red;">Token has expired</h1></body></html>');
         }
     
-        // const orginaltoken =AuthServices.randomToken(18, email, timestamp)
-        //const originalToken = AuthServices.customToken(18, email as string, timestamp as string);
-        const originalToken = AuthServices.generateDeterministicToken(email, timestamp)
-        console.log(originalToken , " orginaltoken vs token", token )
-       
+        const originalToken = AuthServices.generateDeterministicToken(email, timestamp);
+    
         if (token !== originalToken) {
             return res.status(400).send('<html><body><h1 style="color: red;">Invalid token</h1></body></html>');
         }
-
-        // we can change flag of verified to true here
+    
+        // Serve the HTML form to the user
+        return res.send(`
+            <html>
+            <body>
+                <h1>Email Verification</h1>
+                <form action="/api/v1/users/verify-email" method="POST">
+                    <input type="hidden" name="token" value="${token}" />
+                    <input type="hidden" name="email" value="${email}" />
+                    <input type="hidden" name="timestamp" value="${timestamp}" />
+                    <!-- Add any additional fields needed for verification here -->
+                    <label for="Your_Email">Your Email:</label>
+                    <input type="text" id="Your_Email" name="additionalDetail" required />
+                    <button type="submit">Verify Email</button>
+                </form>
+            </body>
+            </html>
+        `);
+    }
+    
+    private static async handleEmailVerificationForm(req: Request, res: Response) {
+        const { token, email, timestamp, additionalDetail } = req.body;
+    
+        if (!token || !email || !timestamp || !additionalDetail || (email !== additionalDetail)) {
+            return res.status(400).send('<html><body><h1 style="color: red;">Invalid form submission</h1></body></html>');
+        }
+        
+        const currentTime = Date.now().toString();
+        const timeDifference = Math.abs(Number(currentTime) - Number(timestamp));
+        const tenMinutesInMilliseconds = 10 * 60 * 1000;
+    
+        if (timeDifference > tenMinutesInMilliseconds) {
+            return res.status(400).send('<html><body><h1 style="color: red;">Token has expired</h1></body></html>');
+        }
+    
+        const originalToken = AuthServices.generateDeterministicToken(email, timestamp);
+    
+        if (token !== originalToken) {
+            return res.status(400).send('<html><body><h1 style="color: red;">Invalid token</h1></body></html>');
+        }
+    
+        // Verify and update the user
         const user = await prisma.user.update({
-            where:{
-                email:email,
-            },
-            data:{
-                emailVerified: true,
-            }
-        })
-        res.status(200).send('<html><body><h1 style="color: green;">Email Verified Successfully</h1></body></html>');
+            where: { email: email },
+            data: { emailVerified: true },
+        });
+    
+        return res.status(200).send('<html><body><h1 style="color: green;">Email Verified Successfully</h1></body></html>');
     }
     
     
@@ -446,6 +519,7 @@ class UserService {
     static changeYourPassword = asyncHandler.wrap(UserService.changePassword);
     static sendVerificationURLEmail = UserService.sendEmailVerificationLink;
     static verifyYourEmail = UserService.verifyEmail;
+    static handleForm = UserService.handleEmailVerificationForm
 }
 
 export default UserService;
