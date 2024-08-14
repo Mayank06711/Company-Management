@@ -382,7 +382,5 @@ AllowedHeaders: List of headers that are allowed in CORS requests. Use ["*"] to 
 ExposeHeaders: List of headers that browsers are allowed to access in the response from a CORS request.
 By configuring CORS in the AWS Management Console, you allow your frontend application hosted on http://localhost:9001 (or any other origin you specify) to make requests directly to your S3 bucket, resolving the CORS policy issue you encountered.
 
+<<<<<<< HEAD
 */
-
-
-
