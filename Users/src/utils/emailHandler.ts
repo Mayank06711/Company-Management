@@ -5,7 +5,7 @@ import { EventData } from "../types/scriptInterfaces";
 import EmitEvents from "../utils/eventEmitter";
 import { EMAIL_FAILED, OK_EMAIL_SENT, PRIORITY } from "../constant";
 
-const sendEmail = async (options: EventData) => {
+const sendEmails = async (options: EventData) => {
   // create a transporter
   try {
     const transporter = nodemailer.createTransport({
@@ -17,15 +17,35 @@ const sendEmail = async (options: EventData) => {
         pass: process.env.EMAIL_USERNAME_PASSWORD!, // generated ethereal password
       },
     } as SMTPTransport.Options);
-
+     
+    let emailOption 
     // Define email options
-    const emailOption = {
+    if(options?.data?.url){
+     emailOption = {
+      from: "XYZ-PVT.LMT support<support@xyz.com>",
+      to: options.email,
+      subject: options.subject,
+      text: options.message,
+      html: `
+      <html>
+        <body>
+          <p>${options.message}</p>
+          <p>Click the link below to proceed:</p>
+          <a href="${options?.data?.url}" style = "text-decoration: none; font-weight: bold; display: inline-block; padding: 10px 20px;  background-color: #f1f1f1;  border-radius: 5px; border: 1px solid #ddd; transition: background-color 0.3s ease;">Verify-Email</a>
+        </body>
+      </html>
+    `
+    }
+  }else 
+  {
+    emailOption = {
       from: "XYZ-PVT.LMT support<support@xyz.com>",
       to: options.email,
       subject: options.subject,
       text: options.message,
     };
-
+   }
+   
     await transporter.sendMail(emailOption);
     console.log("Email sent successfully  \n");
 
@@ -51,4 +71,4 @@ const sendEmail = async (options: EventData) => {
 
 
 
-export { sendEmail };
+export { sendEmails };
