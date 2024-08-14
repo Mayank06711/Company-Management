@@ -10,22 +10,29 @@ import { Server } from 'http';
 import prisma from "./helper/clientPrism";
 // Import routes
 import userRouter from "../src/routes/user.routes";
+import adminRouter from "../src/routes/admin.routes";
 import AWSRouter from "../src/routes/aws.routes";
 import DepartmentRouter from "./routes/department.routes";
+import employeRouter from "../src/routes/employee.routes";
+import notificationRouter from "../src/routes/notification.routes";
+import PostionRouter from "../src/routes/position.routes"
 import { middleware } from "./midlewares/middleware";
 import EventHandler from "../src/utils/eventHandler"
-
+import NotificationService from "./controllers/notification.controller";
 import {intit }from "../src/kafka/kafkaManager"
 // Class to manage the server
 class ServerManager {
   private app = express();
   private server!: Server; // ! (definite assignment) operator to tell TypeScript that server will be assigned before it is used as it will not be assigned until start method is called
 //   private redisClient: RedisClient;
+  private notificationService = NotificationService.getInstance();
+
   constructor() {
     this.loadEnvironmentVariables();
     this.initializeMiddlewares();
     this.initializeRoutes();
     this.initializeErrorHandling();
+    this.initializeNoificationService();
     this.initializeGracefulShutdown();
   }
 
@@ -56,9 +63,13 @@ class ServerManager {
   // Initialize routes
   private initializeRoutes() {
     this.app.use("/api/v1/users", userRouter);
+    this.app.use("/api/v1/admins", adminRouter);
     this.app.use("/api/v1/xyz-company", AWSRouter);
     this.app.use("/api/v1/aws", AWSRouter);
-    this.app.use("/api/v1/department", /*auth middleware*/ DepartmentRouter);
+    this.app.use("/api/v1/department", DepartmentRouter);
+    this.app.use("/api/v1/employee", employeRouter);
+    this.app.use("/api/v1/notification", notificationRouter);
+    this.app.use("/api/v1/position", PostionRouter);
     this.app.get('/', (req: Request, res: Response) => {
       res.status(201).send('Hello Now my application is working!');
     });
@@ -72,12 +83,14 @@ class ServerManager {
     });
   }
 
-
+  private initializeNoificationService() {
+    const notificationService = NotificationService.getInstance();
+  }
 
   // Start the server
   public start() {
     new EventHandler()
-    intit()
+    //intit()
     this.server = this.app.listen(process.env.PORT || 9001, () => {
       console.log('Server is running on port 9001');
     });
@@ -114,7 +127,9 @@ class ServerManager {
 
       // Flush logs
       this.flushLogs();
-
+      
+      // stop notifications servcies
+      NotificationService.getInstance().stopWorker();
       // Close database connection
       await this.closeDatabaseConnection();
 
@@ -189,7 +204,6 @@ class ServerManager {
 // Initialize and start the server
 const serverManager = new ServerManager();
 
-new EventHandler();
 // Start the server to listen for incoming requests. This will start the server and log the start message.
 serverManager.start();
 
