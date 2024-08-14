@@ -15,8 +15,9 @@ class DepartmentService{
         const parsedDepartment = DepartmentSchema.safeParse(req.body);
     
         // Check user role
+        console.log(req.user)
         if (req.user?.role !== "Director" && req.user?.role !== "CEO") {
-            return res.status(403).json(new ApiResponse(403, "You are not allowed to create department"));
+            return res.status(403).json(new ApiResponse(403, {},"You are not allowed to create department"));
         }
     
         // Validate the department data
@@ -26,12 +27,13 @@ class DepartmentService{
     
         try {
             const newDepartment = await prisma.department.create({
-                data: parsedDepartment.data,
+                data: {...parsedDepartment.data, isActive:true},
             });
             const eventData = {
                 data:{
                     name:newDepartment.name as string,
                     id:newDepartment.id as string, 
+                    isActive:true as boolean,
                     createdAt:newDepartment.createdAt.toISOString(),
                 }, 
                 message:`Department ${newDepartment.name} created successfully`
@@ -50,12 +52,12 @@ class DepartmentService{
     private static async updateDepartment(req: Request, res: Response) {
         const { id } = req.params; // Get the department ID from the request parameters
         const parsedDepartment = DepartmentSchema.safeParse(req.body); // Validate incoming data
-    
         // Check user role
         if (req.user?.role !== "Director" && req.user?.role !== "CEO") {
             return res.status(403).json({ msg: "You are not eligible" });
         }
     
+        console.log(parsedDepartment)
         // Validate the department data
         if (!parsedDepartment.success) {
             return res.status(400).json({ msg: "Invalid department data", errors: parsedDepartment.error.errors });
@@ -121,6 +123,35 @@ class DepartmentService{
         }
     }
     
+    private static async reactivate(req:Request, res:Response){
+        const { id } = req.params; // Get the department ID from the request parameters
+        if (req.user?.role !== "Director" && req.user?.role !== "CEO") {
+            return res.status(403).json({ msg: "You are not eligible" });
+        }
+        
+        try {
+            // Update the department in the database
+            const updatedDepartment = await prisma.department.update({
+                where: { id }, // Find the department by ID
+                data: {
+                    isActive:true,
+                    updatedAt: new Date(), // Optionally update the updatedAt field
+                },
+            });
+            // email ids of admins 
+            EmitEvents.createEvent(UPDATE, {message:"Department Reactiveted successfully", data:{ department: updatedDepartment.name, updatedAt: updatedDepartment.updatedAt}}, PRIORITY.UPDATE)
+            return res.status(200).json({ msg: "Department updated successfully", department: updatedDepartment });
+        } catch (error:any) {
+            if (error.code === 'P2002') { // Unique constraint violation
+                return res.status(409).json({ msg: "Department name must be unique", error: error.message });
+            }
+            // send email ids of amdind
+            EmitEvents.createEvent(FAILED, {message:error.message, data:{msg:"Error updating department:"}}, PRIORITY.FAILED)
+            console.error("Error updating department:", error);
+            return res.status(500).json({ msg: "Internal server error", error: error.message });
+        }
+    }
+
     private static async getAboutDepartment(req:Request, res:Response){
         const { name } = req.params; // Get the department ID from the request parameters
         if(name && typeof name !== 'string'){
@@ -138,14 +169,14 @@ class DepartmentService{
             return res.status(404).json({ msg: "Department not exist or closed" });
         }
         // here include details of department head
-        return res.status(200).json(new ApiResponse(200, {id:department.id, name:department.name, description:department.desc },"Department found"))
+        return res.status(200).json(new ApiResponse(200, {id:department.id, name:department.name, description:department.desc, updatedAt:new Date(department.updatedAt).toLocaleDateString('en-GB'), isActive:department.isActive,createdAt:new Date(department.createdAt).toLocaleDateString('en-GB') },"Department found"))
     }
 
-    private static async departmentByName(name:string){
+    private static async departmentById(id:string){
         return await prisma.department.findFirst({
             where: {
                 AND:[
-                    { name },
+                    { id },
                     {isActive:true}
                 ]},
         })
@@ -153,9 +184,10 @@ class DepartmentService{
 
    static registerDepartment = DepartmentService.newDepartment;
    static renewDepartment = DepartmentService.updateDepartment;
+   static reactivateDepartment = DepartmentService.reactivate;  // new endpoint for reactivating department  // reactivateDepartment = DepartmentService.reactivate;  // old endpoint for reactivating department  // reactivateDepartment = DepartmentService.reactivate;  // old endpoint for reactivating department  // reactivateDepartment = DepartmentService.reactivate;  // old endpoint for reactivating department  // reactivateDepartment = DepartmentService.reactivate;  // old endpoint for
    static removeDepartment = DepartmentService.deleteDepartment;
    static getDepartmentAbout = DepartmentService.getAboutDepartment;
-   static getDepartmentByName = DepartmentService.departmentByName
+   static getDepartmentById = DepartmentService.departmentById
 }
 
 export default DepartmentService;
