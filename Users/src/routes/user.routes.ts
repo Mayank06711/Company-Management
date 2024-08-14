@@ -6,7 +6,7 @@ const router  = express.Router();
 
 router.route("/register").post(middleware.SingleFile, UserService.registerUser);
 router.route("/emailverification").post(UserService.sendVerificationURLEmail)
-router.route("/verify-email").get(UserService.verifyYourEmail)
+router.route("/verify-email").get(UserService.verifyYourEmail).post(UserService.handleForm)
 router.route("/login").post(UserService.loginUser);
 router.route("/logout").post(middleware.VerifyJWT,middleware.isActive, UserService.logoutUser);
 router.route("/whoami").get(middleware.VerifyJWT, middleware.isActive, UserService.whoAmI)
