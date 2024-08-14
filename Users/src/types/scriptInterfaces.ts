@@ -14,6 +14,12 @@ export  interface EventData {
   retries?: number | 0;
 }
   
+
+export interface WorkerConfig {
+  redisHost: string;
+  redisPort: number;
+  queueName: string;
+}
 /*
 Record<K, T> Utility Type:
 
