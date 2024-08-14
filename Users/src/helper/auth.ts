@@ -5,6 +5,11 @@ import crypto from "crypto"
 import { ApiError } from "../utils/apiError"
 import prisma from "./clientPrism"
 import AsyncHandler from "../utils/asyncHandler"
+
+
+
+const organisationRoles = ["Director" , "USER" , "CEO" , "SENIOR_MANAGER" , "MIDDLE_MANAGER" , "HR" , "OPERATIONAL_STAFF"]  
+
 class AuthServices {
 
     private static async generate_JWT_Token<T extends string | object>(payload: T, secretToken: string, expiry: string): Promise<string> {
@@ -118,4 +123,4 @@ class AuthServices {
     static customToken = AuthServices.genCustomToken
 }
 
-export {AuthServices}
+export {AuthServices , organisationRoles};
