@@ -73,15 +73,16 @@ class AWS_SERVICES {
       });
 
       await s3Client.send(completeMultipartUpload);
-
+      
       return `https://${bucket}.s3.amazonaws.com/${key}`;
     } catch (error: any) {
       console.error(error);
       throw new ApiError(500, error?.message, error);
     }
    }
+
     // to upload objects to s3
-    private static async putObjectTos3(bucket:string,fileName:string  , contentType: string, expiresIn: number): Promise<string>
+    private static async putObjectTos3(bucket:string, fileName:string  , contentType: string, expiresIn: number): Promise<string>
     {
         const command = new PutObjectCommand({
             Bucket: bucket,
@@ -99,7 +100,7 @@ class AWS_SERVICES {
           throw new ApiError(500, error?.message, error);
        }
     }
-    
+  
     // to getObject from s3
     private static async getObjectFromS3(bucketName: string, objectKey: string, expiresIn: number){
         const getObjectCommand = new GetObjectCommand({Bucket: bucketName, Key: objectKey});

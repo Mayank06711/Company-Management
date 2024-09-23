@@ -47,12 +47,10 @@ import {z} from "zod"
 
 
   const ApplicantionSchema = z.object({
-    phoneNum: z.number().int().positive().min(1000000000, "Phone number must be a valid 10-digit number").optional(),
+    phoneNum: z.number().int().positive().min(1000000000, "Phone number must be a valid 10-digit number"),
     type: z.enum(["Employee", "Intern", "Visitor"]).optional(),
     positionId: z.string(),
     applicantDesc: z.string().optional(),
-    isActive: z.boolean().optional(),
-    appliedAt: z.date().optional(),
   });
   
  

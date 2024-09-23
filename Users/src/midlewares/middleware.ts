@@ -212,8 +212,6 @@ class middleware {
         }
       }
 
-    
-   
    
     private static errorMiddleware(err:any, req:Request, res:Response, next:NextFunction) {
         err.message ||= "Internal Server Error, please try again later"

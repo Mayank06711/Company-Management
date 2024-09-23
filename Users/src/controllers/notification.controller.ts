@@ -62,8 +62,8 @@ class NotificationService {
                   },
                 },
               });
-              
-
+            
+            
             if (!notification) {
                 throw new Error('Notification not found');
             }
@@ -272,6 +272,12 @@ Job Identification: By naming the job send-notification, you can easily identify
 
 Worker Flexibility: The worker can be set up to process different job types differently based on their names. In your current setup, it seems you're handling only send-notification jobs, but if you add more job types later, you can easily extend the worker's logic.
 */
+
+
+
+
+
+
 
 /**
  

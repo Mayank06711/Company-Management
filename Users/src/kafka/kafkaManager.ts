@@ -146,6 +146,7 @@ class KafkaManager {
     }
 }
 
+
 // Example usage:
 const kafkaConfig: KafkaConfig = { clientId: 'user-service', brokers: ['localhost:9092'] };
 const kafkaManager = new KafkaManager(kafkaConfig);

@@ -281,6 +281,11 @@ class position {
     }
  }
 
+ static getPositionById(positionId: string){
+    return prisma.position.findUnique({
+        where: { id: positionId }
+    });
+ }
 
   static newPostion = position.positionRequest
   static getPost = position.getPosition
