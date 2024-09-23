@@ -1,3 +1,4 @@
+
 import {Request, Response, NextFunction} from "express"
 // import {newRequest} from "../types/express"
 import {Redis} from "ioredis"
@@ -39,6 +40,7 @@ class UserService {
         }
         const uploadedResult = await  middleware.UploadFilesToCloudinary([avatar]) // upload avatar to cloudinary if exists
         if(!uploadedResult){
+
             throw new ApiError(500, "Photo Upload failed please try again later")
         } 
         const newUser  = await prisma.user.create({
@@ -509,6 +511,7 @@ class UserService {
     }
 
     static registerUser = asyncHandler.wrap(UserService.newUser);
+
     static loginUser = asyncHandler.wrap(UserService.login);
     static logoutUser = asyncHandler.wrap(UserService.logout);
     static whoAmI = asyncHandler.wrap(UserService.getUser);

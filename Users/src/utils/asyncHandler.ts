@@ -1,3 +1,4 @@
+
 import { RequestHandler,Request, NextFunction, Response } from "express";
 // import {newRequest} from "../types/express"
 // Define a type for the request handler which can be an async or a normal function
@@ -18,6 +19,7 @@ class AsyncHandler {
       });
     };
   }
+
      
     //  static wrap(fn: Function, options: AsyncHandlerOptions = {}) {
     //   return async function  asyncHandlerWrapper(req: newRequest, res: Response, next: NextFunction) {
@@ -35,6 +37,7 @@ class AsyncHandler {
 }
 
 export default AsyncHandler
+
 
 
 

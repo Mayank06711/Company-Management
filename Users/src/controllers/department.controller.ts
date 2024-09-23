@@ -8,23 +8,27 @@ import EmitEvents from "../utils/eventEmitter"
 import { CREATE, CREATED, FAILED, PRIORITY, SOFT_DELETE, UPDATE } from "../constant"
 
 
+
 class DepartmentService{
 
 
     private static async newDepartment(req: Request, res: Response) {
         const parsedDepartment = DepartmentSchema.safeParse(req.body);
     
+<<<<<<< HEAD
         // Check user role
         console.log(req.user)
+=======
+        
+>>>>>>> ddf76d85eae97ce49613666097abc51445c45aa7
         if (req.user?.role !== "Director" && req.user?.role !== "CEO") {
             return res.status(403).json(new ApiResponse(403, {},"You are not allowed to create department"));
         }
     
-        // Validate the department data
+       
         if (!parsedDepartment.success) {
             return res.status(400).json({ msg: "Invalid department data", errors: parsedDepartment.error.errors });
-        }
-    
+        }    
         try {
             const newDepartment = await prisma.department.create({
                 data: {...parsedDepartment.data, isActive:true},
@@ -40,6 +44,7 @@ class DepartmentService{
             }
             EmitEvents.createEvent(CREATED,eventData, PRIORITY.CREATED)
             return res.status(201).json({ msg: "Department created successfully", department: newDepartment });
+
         } 
         catch (error:any) {
             EmitEvents.createEvent(FAILED,{message:error.message, data:{msg:"Error creating department:"}}, PRIORITY.FAILED)
@@ -49,16 +54,28 @@ class DepartmentService{
     }
     
 
+<<<<<<< HEAD
     private static async updateDepartment(req: Request, res: Response) {
         const { id } = req.params; // Get the department ID from the request parameters
         const parsedDepartment = DepartmentSchema.safeParse(req.body); // Validate incoming data
         // Check user role
+=======
+    private static async updateDepartment(req: newRequest, res: Response) {
+        const { id } = req.params; 
+        const parsedDepartment = DepartmentSchema.safeParse(req.body); 
+    
+        
+>>>>>>> ddf76d85eae97ce49613666097abc51445c45aa7
         if (req.user?.role !== "Director" && req.user?.role !== "CEO") {
             return res.status(403).json({ msg: "You are not eligible" });
         }
     
+<<<<<<< HEAD
         console.log(parsedDepartment)
         // Validate the department data
+=======
+        
+>>>>>>> ddf76d85eae97ce49613666097abc51445c45aa7
         if (!parsedDepartment.success) {
             return res.status(400).json({ msg: "Invalid department data", errors: parsedDepartment.error.errors });
         }
@@ -75,8 +92,9 @@ class DepartmentService{
             // email ids of admins 
             EmitEvents.createEvent(UPDATE, {message:"Department updated successfully", data:{ department: updatedDepartment.name, updatedAt: updatedDepartment.updatedAt}}, PRIORITY.UPDATE)
             return res.status(200).json({ msg: "Department updated successfully", department: updatedDepartment });
+
         } catch (error:any) {
-            if (error.code === 'P2002') { // Unique constraint violation
+            if (error.code === 'P2002') { 
                 return res.status(409).json({ msg: "Department name must be unique", error: error.message });
             }
             // send email ids of amdind
@@ -85,23 +103,32 @@ class DepartmentService{
             return res.status(500).json({ msg: "Internal server error", error: error.message });
         }
     }
+
+    
     
 
+
     private static async deleteDepartment(req:Request , res: Response) {
-        const { id } = req.params; // Get the department ID from the request parameters
+        const { id } = req.params; 
     
-        // Check user role
+        
         if (req.user?.role !== "Director" && req.user?.role !== "CEO") {
             return res.status(403).json({ msg: "You are not eligible" });
         }
     
         try {
+<<<<<<< HEAD
             // Delete the department from the database
             const deletedDepartment = await prisma.department.update({
                 where: { id }, // Find the department by ID
                 data:{
                     isActive:false
                 }
+=======
+           
+            const deletedDepartment = await prisma.department.delete({
+                where: { id }, 
+>>>>>>> ddf76d85eae97ce49613666097abc51445c45aa7
             });
             const eventData = {
                data: { 
@@ -114,7 +141,7 @@ class DepartmentService{
             EmitEvents.createEvent(SOFT_DELETE, eventData, PRIORITY.SOFT_DELETE)
             return res.status(200).json({ msg: "Department deleted successfully", department: deletedDepartment });
         } catch (error :any) {
-            if (error.code === 'P2025') { // Record not found
+            if (error.code === 'P2025') { 
                 return res.status(404).json({ msg: "Department not found", error: error.message });
             }
             EmitEvents.createEvent(FAILED, {message:"Failed to deactivate department"}, PRIORITY.FAILED)
