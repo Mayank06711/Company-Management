@@ -11,15 +11,19 @@ prisma.$use(async (params, next)=>{
     if(params.model === "User"){
         if(params.action === "create" || params.action === "update"){
             const user = params.args.data;
-            console.log(user,"|", params.model, "|",params.action,"|", params.args)
+            //console.log(user,"|", params.model, "|",params.action,"|", params.args)
             if(user.password){
                 user.password = await bcrypt.hash(user.password, 10);
                 console.log(user.password, "hashed passowrd \n primsa middleware")
             }
+            if(user.MFASecretKey && user.isMFAEnabled){
+                user.MFASecretKey = await bcrypt.hash(user.MFASecretKey, 10);
+                console.log(user.MFASecretKey, "hashed passowrd \n primsa middleware")
+            }
         }
     }
     const result = await next(params)
-    console.log(result)
+    //console.log(result)
     return result;
 })
 

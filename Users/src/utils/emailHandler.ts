@@ -1,36 +1,74 @@
-import nodemailer from "nodemailer"
-import { ApiError } from "./apiError"
-import { EmailOptions } from "../types/scriptInterfaces"
-import EventEmitter  from "../utils/eventEmitter"
+import nodemailer from "nodemailer";
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
+import { ApiError } from "./apiError";
+import { EventData } from "../types/scriptInterfaces";
+import EmitEvents from "../utils/eventEmitter";
+import { EMAIL_FAILED, OK_EMAIL_SENT, PRIORITY } from "../constant";
 
-const sendEmail = async(option:EmailOptions)=>{
-    // create a transporter
-     try {
-          const transporter = nodemailer.createTransport({
-              host:process.env.EMAIL_HOSTNAME,
-              port: process.env.EMAIL_PORT,
-              secure: false, // true for 465, false for other ports
-              auth: {
-                  user: process.env.EMAIL_USERNAME, // generated ethereal user
-                  pass:  process.env.EMAIL_USERNAME_PASSWORD, // generated ethereal password
-              },
-          });
-      
-          //DEfine email options
-          const emailOption = {
-              from:"BlogMini support<support@blogmini.com>",
-              to:option.email,
-              subject:option.subject,
-              text:option.message,
-          }
-         await transporter.sendMail(emailOption)
-         // emit event from here
-         console.log("Email sent successfully-> \n")
-     } catch (error:any) {
-        console.log(error, "Error sending email-> \n")
-        // emit event here also
-        throw new ApiError(500, "Nodemailer error", error.message)
-     }
+const sendEmails = async (options: EventData) => {
+  // create a transporter
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOSTNAME!,
+      port: Number(process.env.EMAIL_PORT!), // Ensure the port is a number
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.EMAIL_USERNAME!, // generated ethereal user
+        pass: process.env.EMAIL_USERNAME_PASSWORD!, // generated ethereal password
+      },
+    } as SMTPTransport.Options);
+     
+    let emailOption 
+    // Define email options
+    if(options?.data?.url){
+     emailOption = {
+      from: "XYZ-PVT.LMT support<support@xyz.com>",
+      to: options.email,
+      subject: options.subject,
+      text: options.message,
+      html: `
+      <html>
+        <body>
+          <p>${options.message}</p>
+          <p>Click the link below to proceed:</p>
+          <a href="${options?.data?.url}" style = "text-decoration: none; font-weight: bold; display: inline-block; padding: 10px 20px;  background-color: #f1f1f1;  border-radius: 5px; border: 1px solid #ddd; transition: background-color 0.3s ease;">Verify-Email</a>
+        </body>
+      </html>
+    `
+    }
+  }else 
+  {
+    emailOption = {
+      from: "XYZ-PVT.LMT support<support@xyz.com>",
+      to: options.email,
+      subject: options.subject,
+      text: options.message,
+    };
    }
+   
+    await transporter.sendMail(emailOption);
+    console.log("Email sent successfully  \n");
 
-   export {sendEmail}
+    // Emit event after sending email
+    EmitEvents.createEvent(OK_EMAIL_SENT, {
+      req: options.req,
+      data: options.data,
+      message: "Email sent successfully",
+    }, PRIORITY.OK_EMAIL_SENT);
+  } catch (error: any) {
+    console.log(error, "Error sending email-> \n");
+
+    // Emit event on error
+    EmitEvents.createEvent(EMAIL_FAILED , {
+      req: options.req,
+      data: options.data,
+      message: error.message,
+    },PRIORITY.REJECT);
+
+    throw new ApiError(500, "Nodemailer error", error.message);
+  }
+};
+
+
+
+export { sendEmails };

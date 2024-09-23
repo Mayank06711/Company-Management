@@ -1,14 +1,18 @@
-import { Request, Response, NextFunction } from "express";
+import {Request ,Response, NextFunction } from "express";
+import {newRequest} from "../types/express"
 import JWT from "jsonwebtoken"
+import {JwtPayload} from "jsonwebtoken"
 import bcrypt from "bcrypt"
 import {v4 as uuid} from "uuid"
 import multer from "multer"
 import { v2 as cloudinary } from "cloudinary"
-import AsyncHandler from "../utils/asyncHandler"
 import prisma from "../helper/clientPrism";
-import cloudin
 
-
+import { User } from "@prisma/client";
+import { ApiError } from "../utils/apiError";
+import AsyncHandler from "../utils/asyncHandler";
+import fs from "fs";
+import path from 'path';
 
 
 
@@ -18,7 +22,25 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET 
 })
 
-console.log(process.env.CLOUDINARY_API_KEY, "cloudinary API key: ")
+// console.log(process.env.CLOUDINARY_API_KEY, "cloudinary API key: ")
+function getFormattedDate() {
+  const now = new Date();
+  return `${now.getFullYear()}-${(now.getMonth() + 1)
+    .toString()
+    .padStart(2, '0')}-${now
+    .getDate()
+    .toString()
+    .padStart(2, '0')} ${now
+    .getHours()
+    .toString()
+    .padStart(2, '0')}:${now
+    .getMinutes()
+    .toString()
+    .padStart(2, '0')}:${now
+    .getSeconds()
+    .toString()
+    .padStart(2, '0')}`;
+}
 class middleware {
     
     // Multer middleware method for single and multiple files
@@ -27,9 +49,10 @@ class middleware {
           fileSize: 1024 * 1024 * 5, // 5mb
         },
     }); //  by default it will use our ram memory  to store files in buffer format  as we have not provided any location to store files
+    
     private static singleFile = middleware.multerUpload.array("avatar", 1)
     private static attachmentsMulter = middleware.multerUpload.array("arrayFiles", 5)
-     
+    
     private static getBase64 = (file:any) =>`data:${file[0].mimetype};base64,${file[0].buffer.toString("base64")}`
     private static async uploadFilesToCloudinary(files: any[] = []){  
       if (!files || files.length === 0) {
@@ -71,85 +94,46 @@ class middleware {
             throw new Error("Error uploading files to cloudinary");
           }
     }
-    // auth middleware method
-    // private static async verifyJWT(req: Request, res: Response, next: NextFunction) {
-    //     const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")[0]; // Extract the access token from cookies or headers
-    
-    //     if (!accessToken) {
-    //         // Handle error if access token is missing
-    //         // Typically, you would return an error response or call the 'next' function with an error
-    //         // For example: return res.status(401).json({ message: 'No access token provided' });
-    //         // Or: return next(new Error('No access token provided'));
-    //     }
-    
-    //     const decodedToken = JWT.verify(accessToken, process.env.ACCESS_TOKEN_SECRET); // Verify and decode the access token
-    
-    //     const user = await prisma.user.findFirst({
-    //         where: {
-    //             id: decodedToken?.id, // Find the user based on the decoded token's ID
-    //         },
-    //         select: {
-    //             isMFAEnabled: true, // Include the user's MFA status in the response
-    //             active: true, // Include whether the user is active
-    //             username: true, // Include the username
-    //             role: true, // Include the user's role
-    //         },
-    //     });
-    
-    //     if (!user) {
-    //         // Handle error if user is not found based on the decoded token
-    //         // Typically, you would return an error response or call the 'next' function with an error
-    //         // For example: return res.status(404).json({ message: 'User not found' });
-    //         // Or: return next(new Error('User not found'));
-    //     }
-    
-    //     req.user = user; // Attach the user object to the request object for further use in the route handler
-    //     next(); // Call the next middleware function or route handler
-    // } // it is a private method
 
-
-
-private static async verifyJWT(req: newRequest, res: Response, next: NextFunction) {
-    try {
-        let accessToken = req.cookies.accessToken || req.headers.authorization?.replace("Bearer ", "");
-
-        if (!accessToken) {
-            return res.status(401).json({ message: 'No access token provided' });
-            // or: throw new Error('No access token provided');
+    private static async verify_JWT(req: Request, res: Response, next: NextFunction) {
+        const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")[0]; // Extract the access token from cookies or headers
+    
+        if (!accessToken || accessToken.length === 0) {
+            throw new ApiError(401, "Invalid Access Token")
         }
-
-        const decodedToken = JWT.verify(accessToken, process.env.ACCESS_TOKEN_SECRET)
+        let decodedToken:string|JwtPayload = JWT.verify(accessToken, process.env.ACCESS_TOKEN_SECRET!); // Verify and decode the access token
+        
+        if(typeof decodedToken === "string"){
+          throw new ApiError(401, "Invalid Access Token")
+        }
         const user = await prisma.user.findFirst({
-            where: { id: decodedToken.id },
+            where: {
+              OR:[
+                {username: decodedToken.username},
+                {id: decodedToken.id}
+              ]
+            },
             select: {
-                isMFAEnabled: true,
-                active: true,
-                username: true,
-                role: true,
+                id:true,
+                email:true,
+                isMFAEnabled: true, // Include the user's MFA status in the response
+                active: true, // Include whether the user is active
+                username: true, // Include the username
+                role: true, // Include the user's role
             },
         });
-
+    
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-            // or: throw new Error('User not found');
+           throw new ApiError(401, "Invalid access Token")
         }
-
-        req.user = user;
-        next();
-    } catch (error) {
-        console.error('Error in verifyJWT:', error);
-        return res.status(401).json({ message: 'Invalid token' });
-        // or: next(error);
-    }
-}
-
-
-
-
+    
+        req.user = {id:user.id, role:user.role, username:user.username, isMFAEnabled:user.isMFAEnabled, email: user.email, active:user.active};
+        next(); // Call the next middleware function or route handler
+    } 
 
 
     // private static async verifyMFA(MFASecretKey: string, id: string) {
-    //     const user = await prisma.User.findFirst({
+    //     const user = await prisma.user.findFirst({
     //         where:{
     //             id: id, // if not work try adding+
     //             isMFAEnabled: true,
@@ -188,7 +172,7 @@ private static async verifyJWT(req: newRequest, res: Response, next: NextFunctio
     // }
 
 
-    // chech if admin or not
+
     // private static isAdmin(req:Request, res:Response, next:NextFunction) {
     //     const {role} = req.user.role;
     //     const originalUrl = req.originalUrl
@@ -202,7 +186,7 @@ private static async verifyJWT(req: newRequest, res: Response, next: NextFunctio
     //     }
     // }
 
-    // check if payment request
+  
     // private static isPayment(req:Request, res:Response, next:NextFunction) {
     //     const protocol = req.protocol // http or htttps
     //     const hostname = req.hostname
@@ -218,12 +202,38 @@ private static async verifyJWT(req: newRequest, res: Response, next: NextFunctio
     //     }
     // }
 
-    // for all error
+      private static  Active(req:Request, res:Response, next:NextFunction){
+        if (req.user?.active) {
+            // console.log(req.user.active, "i am loggin in")
+            next()
+        } else {
+          // console.log(req, "i am loggin in")
+            //  return res.status(401).json({ message: "You are not authorized to access this resource" });
+            throw new ApiError(401, "You are not authorized to access this resource")
+        }
+      }
+
+    
+   
+   
     private static errorMiddleware(err:any, req:Request, res:Response, next:NextFunction) {
         err.message ||= "Internal Server Error, please try again later"
         const statusCode = err.statusCode || 500
 
         console.error(`Error: ${err}`); // apierror
+        
+         // Log the error to a file with a timestamp
+         const logMessage = `${getFormattedDate()} - Error: ${err.message}\n${
+         err.stack
+        }\npathname: ${req.path} statusCode: ${statusCode} \n\n`;
+        const logFilePath = path.join(__dirname, '../../logs', 'error.log');
+
+         // Ensure the logs directory exists
+        fs.mkdirSync(path.dirname(logFilePath), { recursive: true });
+        //Create the logs directory if it does not exist, using recursive: true to ensure all parent directories are created as well
+         // Append the error log to the file
+        fs.appendFileSync(logFilePath, logMessage);
+
         res.status(statusCode).json({ 
             sucess:false,
             message:err.message
@@ -235,7 +245,8 @@ private static async verifyJWT(req: newRequest, res: Response, next: NextFunctio
     static SingleFile = middleware.singleFile;
     static AttachmentsMulter = middleware.attachmentsMulter;
     static UploadFilesToCloudinary = middleware.uploadFilesToCloudinary;
-    // static VerifyJWT = AsyncHandler.wrap(middleware.verifyJWT);
+    static VerifyJWT =  AsyncHandler.wrap(middleware.verify_JWT);
+    static isActive  = middleware.Active;
     // static IsMFAEnabled = AsyncHandler.wrap(middleware.isMFAEnabled);
     // static IsAdmin = AsyncHandler.wrap(middleware.isAdmin);
     // static IsPayment = AsyncHandler.wrap(middleware.isPayment);

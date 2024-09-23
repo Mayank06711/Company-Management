@@ -1,3 +1,4 @@
+import { channel } from "diagnostics_channel";
 import {z} from "zod"
 
   const UserSchema = z.object({
@@ -11,12 +12,11 @@ import {z} from "zod"
   
 
   const EmployeeSchema = z.object({
-    phoneNum: z.number().int().positive().min(1000000000, "Phone number must be a valid 10-digit number").optional(),
+    phoneNum: z.number().int().positive().min(1000000000, "Phone number must be a valid 10-digit number"),
     positionDesc: z.string().optional(),
-    departmentId: z.string().optional(),
-    salary: z.number().int().min(0, "Salary must be a non-negative integer").optional(),
-    userId: z.string().optional(),
-    positionId: z.string().optional(),
+    departmentId: z.string(),
+    salary: z.number().int().min(0, "Salary must be a non-negative integer"),
+    positionId: z.string(),
   });
 
 
@@ -60,6 +60,8 @@ import {z} from "zod"
   const NotificationsSchema = z.object({
     type: z.string(),
     message: z.string(),
+    channel: z.enum(["Email", "SMS", "Whatsapp"]).optional(),
+    userId: z.string(),  // assuming userId is a string (you can change it to a number if needed)  // it's a good practice to use a string for userId to make it easier to work with in the database.  // using a string for userId allows you to use it as a unique identifier in the database, making it easier to search and retrieve data.  // it's also a good practice to use a consistent naming convention for userId to make it easier to understand and
     status: z.enum(["Pending", "Sent", "Recieved"]).optional(),
   });
 
