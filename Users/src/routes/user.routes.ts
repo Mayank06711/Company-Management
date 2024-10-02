@@ -1,7 +1,10 @@
+
 import express from "express";
 import { middleware } from "../midlewares/middleware";
 import UserService from "../controllers/user.controller";
 const router  = express.Router();
+
+
 
 
 router.route("/register").post(middleware.SingleFile, UserService.registerUser);

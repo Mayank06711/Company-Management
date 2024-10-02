@@ -7,8 +7,8 @@ const router  = express.Router();
 
 
 router.route("/uploadAws").get(AWSAPI.upload)
-router.post('/generatePresignedUrl', AWSAPI.generatePresignedURL);
-router.post("/uploadfiles", middleware.AttachmentsMulter, AWSAPI.uploadFile)
+
+router.post('/generatePresignedUrl', AWSAPI.generatePresignedURL);;
 
 
 
