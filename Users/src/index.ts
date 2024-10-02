@@ -1,12 +1,12 @@
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import express, { Request, Response } from 'express';
+import express, { Request, Response } from "express";
 import cors from "cors";
 import { rateLimit } from "express-rate-limit";
 import fs from "fs";
 import path from "path";
 // import { RedisClient } from 'redis';
-import { Server } from 'http';
+import { Server } from "http";
 import prisma from "./helper/clientPrism";
 // Import routes
 import userRouter from "../src/routes/user.routes";
@@ -15,16 +15,17 @@ import AWSRouter from "../src/routes/aws.routes";
 import DepartmentRouter from "./routes/department.routes";
 import employeRouter from "../src/routes/employee.routes";
 import notificationRouter from "../src/routes/notification.routes";
-import PostionRouter from "../src/routes/position.routes"
+import PostionRouter from "../src/routes/position.routes";
 import { middleware } from "./midlewares/middleware";
-import EventHandler from "../src/utils/eventHandler"
+import EventHandler from "../src/utils/eventHandler";
 import NotificationService from "./controllers/notification.controller";
-import {intit }from "../src/kafka/kafkaManager"
+import { intit } from "../src/kafka/kafkaManager";
+import swaggerDocs from "./utils/swaggerConfig";
 // Class to manage the server
 class ServerManager {
   private app = express();
   private server!: Server; // ! (definite assignment) operator to tell TypeScript that server will be assigned before it is used as it will not be assigned until start method is called
-//   private redisClient: RedisClient;
+  //   private redisClient: RedisClient;
   private notificationService = NotificationService.getInstance();
 
   constructor() {
@@ -39,25 +40,30 @@ class ServerManager {
   // Load environment variables
   private loadEnvironmentVariables() {
     dotenv.config({
-      path: ".env"  // Path to your environment variables file
+      path: ".env", // Path to your environment variables file
     });
   }
 
   // Initialize middlewares
   private initializeMiddlewares() {
-    this.app.use(cors({
-      origin: ["http://localhost:5173", "*"],//process.env.CORS_ORIGIN
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-    }));
+    this.app.use(
+      cors({
+        origin: ["http://localhost:5173", "*"], //process.env.CORS_ORIGIN
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      })
+    );
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true, limit: "30kb" }));
     this.app.use(cookieParser());
-    this.app.use(rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 100, // limit each IP to 100 requests per windowMs
-      message: "Too many requests from this IP, please try again later after 15 mins."
-    }));
+    this.app.use(
+      rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100, // limit each IP to 100 requests per windowMs
+        message:
+          "Too many requests from this IP, please try again later after 15 mins.",
+      })
+    );
   }
 
   // Initialize routes
@@ -70,8 +76,9 @@ class ServerManager {
     this.app.use("/api/v1/employee", employeRouter);
     this.app.use("/api/v1/notification", notificationRouter);
     this.app.use("/api/v1/position", PostionRouter);
-    this.app.get('/', (req: Request, res: Response) => {
-      res.status(201).send('Hello Now my application is working!');
+    swaggerDocs(this.app);
+    this.app.get("/", (req: Request, res: Response) => {
+      res.status(201).send("Hello Now my application is working!");
     });
   }
 
@@ -89,33 +96,37 @@ class ServerManager {
 
   // Start the server
   public start() {
-    new EventHandler()
-    //intit()
+    new EventHandler();
+    // intit()
     this.server = this.app.listen(process.env.PORT || 9001, () => {
-      console.log('Server is running on port 9001');
+      console.log("Server is running on port 9001");
     });
   }
 
   // Initialize graceful shutdown logic
   private initializeGracefulShutdown() {
-    process.on('unhandledRejection', (reason, promise) => {
-      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-      this.logError(`${new Date().toISOString()} - Unhandled Rejection at: ${promise} reason: ${reason}`);
+    process.on("unhandledRejection", (reason, promise) => {
+      console.error("Unhandled Rejection at:", promise, "reason:", reason);
+      this.logError(
+        `${new Date().toISOString()} - Unhandled Rejection at: ${promise} reason: ${reason}`
+      );
     });
 
-    process.on('uncaughtException', (error) => {
-      console.error('Uncaught Exception:', error);
-      this.logError(`${new Date().toISOString()} - Uncaught Exception: ${error.stack}`);
+    process.on("uncaughtException", (error) => {
+      console.error("Uncaught Exception:", error);
+      this.logError(
+        `${new Date().toISOString()} - Uncaught Exception: ${error.stack}`
+      );
       this.shutdownGracefully();
     });
 
-    process.on('SIGTERM', this.shutdownGracefully.bind(this));
-    process.on('SIGINT', this.shutdownGracefully.bind(this));
+    process.on("SIGTERM", this.shutdownGracefully.bind(this));
+    process.on("SIGINT", this.shutdownGracefully.bind(this));
   }
 
   // Log error to file
   private logError(message: string) {
-    const logFilePath = path.join(__dirname, '../logs', 'error.log'); // Log file outside src directory
+    const logFilePath = path.join(__dirname, "../logs", "error.log"); // Log file outside src directory
     fs.mkdirSync(path.dirname(logFilePath), { recursive: true }); // Create directories if they don't exist
     fs.appendFileSync(logFilePath, `${message}\n\n`);
   }
@@ -123,27 +134,27 @@ class ServerManager {
   // Perform cleanup logic before shutdown
   private async shutdownGracefully() {
     try {
-      console.log('Performing cleanup before shutdown...');
+      console.log("Performing cleanup before shutdown...");
 
       // Flush logs
       this.flushLogs();
-      
+
       // stop notifications servcies
       NotificationService.getInstance().stopWorker();
       // Close database connection
       await this.closeDatabaseConnection();
 
       // Close Redis client
-    //   await this.closeRedisClient();
+      //   await this.closeRedisClient();
 
       // this.KAFKA.disconnectKafkaProducer()
       // Stop the server
       await this.stopServer();
 
-      console.log('Cleanup completed. Exiting application.');
+      console.log("Cleanup completed. Exiting application.");
       process.exit(0); // Exit with success code
     } catch (error) {
-      console.error('Error during cleanup:', error);
+      console.error("Error during cleanup:", error);
       process.exit(1); // Exit with failure code
     }
   }
@@ -151,49 +162,49 @@ class ServerManager {
   // Flush logs (example: flush log buffer to disk)
   private flushLogs() {
     const logMessage = `${new Date().toISOString()} - Application shutdown initiated.\n\n`;
-    const logFilePath = path.join(__dirname, '../logs', 'shutdown.log');
+    const logFilePath = path.join(__dirname, "../logs", "shutdown.log");
     fs.mkdirSync(path.dirname(logFilePath), { recursive: true });
     fs.appendFileSync(logFilePath, logMessage);
-    console.log('Logs flushed.');
+    console.log("Logs flushed.");
   }
 
   // Close the database connection
   private async closeDatabaseConnection() {
-    console.log('Closing database connection...');
+    console.log("Closing database connection...");
     try {
-        await prisma.$disconnect(); // // Close the Prisma Client connection
-        console.log('Database connection closed.');
-      } catch (error) {
-        console.error('Error closing database connection:', error);
-      }
+      await prisma.$disconnect(); // // Close the Prisma Client connection
+      console.log("Database connection closed.");
+    } catch (error) {
+      console.error("Error closing database connection:", error);
+    }
   }
 
   // Close the Redis client
-//   private closeRedisClient() {
-//     return new Promise<void>((resolve, reject) => {
-//       console.log('Closing Redis client...');
-//       this.redisClient.quit((err) => {
-//         if (err) {
-//           console.error('Error closing Redis client:', err);
-//           reject(err);
-//         } else {
-//           console.log('Redis client closed.');
-//           resolve();
-//         }
-//       });
-//     });
-//   }
+  //   private closeRedisClient() {
+  //     return new Promise<void>((resolve, reject) => {
+  //       console.log('Closing Redis client...');
+  //       this.redisClient.quit((err) => {
+  //         if (err) {
+  //           console.error('Error closing Redis client:', err);
+  //           reject(err);
+  //         } else {
+  //           console.log('Redis client closed.');
+  //           resolve();
+  //         }
+  //       });
+  //     });
+  //   }
 
   // Stop the server
   private stopServer() {
     return new Promise<void>((resolve, reject) => {
-      console.log('Stopping server...');
+      console.log("Stopping server...");
       this.server.close((err) => {
         if (err) {
-          console.error('Error stopping server:', err);
+          console.error("Error stopping server:", err);
           reject(err);
         } else {
-          console.log('Server stopped.');
+          console.log("Server stopped.");
           resolve();
         }
       });
@@ -207,41 +218,7 @@ const serverManager = new ServerManager();
 // Start the server to listen for incoming requests. This will start the server and log the start message.
 serverManager.start();
 
-export default ServerManager
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export default ServerManager;
 
 // import cookieParser from "cookie-parser";
 // import dotenv from "dotenv"
@@ -274,7 +251,6 @@ export default ServerManager
 // // Middleware to parse cookies
 // app.use(cookieParser())
 
-
 // app.use(rateLimit(
 //     {
 //         windowMs: 15 * 60 * 1000, // 15 minutes
@@ -283,13 +259,12 @@ export default ServerManager
 //     }
 // ))
 
-// console.log(process.env.NODE_ENV, process.env.PORT) 
+// console.log(process.env.NODE_ENV, process.env.PORT)
 // // Import routes
 // import userRouter from "../src/routes/user.routes"
 // import AWSRouter from "../src/routes/aws.routes"
 // import DepartmentRouter from "./routes/department.routes"
 // import { middleware } from "./midlewares/middleware";
-
 
 // app.use("/api/v1/users", userRouter)
 // app.use("/api/v1/xyz-company", AWSRouter)
@@ -299,7 +274,6 @@ export default ServerManager
 // app.get('/', (req: Request, res: Response) => {
 //     res.status(201).send('Hello Now my application is working!');
 // });
-
 
 // app.use(middleware.ErrorMiddleware)
 
@@ -311,7 +285,6 @@ export default ServerManager
 //     console.log('Server is running on port 9001')
 // })
 
-
 // // Handle unhandled promise rejections
 // process.on('unhandledRejection', (reason, promise) => {
 //     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
@@ -319,7 +292,7 @@ export default ServerManager
 //     fs.appendFileSync(path.join(__dirname, 'logs', 'error.log'), logMessage);
 //     // Optionally, you can handle the rejection in a specific way
 //   });
-  
+
 //   // Handle uncaught exceptions
 //   process.on('uncaughtException', (error) => {
 //     console.error('Uncaught Exception:', error);
@@ -332,20 +305,14 @@ export default ServerManager
 //    // shutdownGracefully();
 //   });
 
-
 // /**
-//  * 
-//  * unhandledRejection: 
-//  This event is emitted when a promise is rejected and no error handler is attached to the promise within a turn of the event loop. 
+//  *
+//  * unhandledRejection:
+//  This event is emitted when a promise is rejected and no error handler is attached to the promise within a turn of the event loop.
 // Catches promise rejections that aren't handled anywhere in your code, preventing the application from crashing unexpectedly.
 // uncaughtException:
 // This event is emitted when an exception is not caught by any try-catch block.
 // Catches synchronous errors that aren't caught anywhere in your code, again preventing unexpected crashes.
 
-
 //  By default, THESE TWO ERROR would cause MY Node.js application to crash. TO PREVENT THIS WE USE THIS BY LISTENING process.on('uncaughtException', ...) event listener.
 // *
-
-
-
-
