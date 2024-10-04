@@ -26,7 +26,7 @@ The system is highly customizable, allowing organizations to configure workflows
 - **Organizational Structure**: Create and maintain the company hierarchy with departments, teams, and reporting lines.
 - **Permissions and Roles**: Assign roles to employees to manage access and workflows.
 - **Real-time Updates**: Ensure organizational changes are reflected in real-time across the platform.
-- ** Payment **: Another microservice for payrolls and other transactions.(Still completing this services)
+- **Payment**: Another microservice for payrolls and other transactions.(Still completing this services)
 ## Technologies Used
 
 - **Backend**: Node.js, Express.js
