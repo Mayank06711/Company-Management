@@ -40,7 +40,6 @@ class UserService {
         }
         const uploadedResult = await  middleware.UploadFilesToCloudinary([avatar]) // upload avatar to cloudinary if exists
         if(!uploadedResult){
-
             throw new ApiError(500, "Photo Upload failed please try again later")
         } 
         const newUser  = await prisma.user.create({
@@ -52,6 +51,7 @@ class UserService {
         })
         if(!newUser){
             throw new ApiError(500, "User creation failed please try again later")
+            // delete user image
         }
         const formattedResult = {
                               id: newUser.id,
@@ -237,7 +237,7 @@ class UserService {
         if(!MFAKey){
             throw new ApiError(400,"Please enter MFA key")
         }
-        if(MFAKey.length < 6){
+        if(MFAKey.length < 6){ // this can be solved on frontend
             throw new ApiError(406,"MFA key should be at least 6 characters long") // not acceptable error
         }
         const user = await prisma.user.findFirst({
