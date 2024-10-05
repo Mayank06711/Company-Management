@@ -224,7 +224,7 @@ export class Notification {
         }
         const notification = parsedNoti.data
         const notificationService = NotificationService.getInstance();
-        const noti =  notificationService.createNotification(notification.type, notification.message, notification.userId, req.body.channel );
+        const noti =  notificationService.createNotification(notification.type, notification.message, req.body.userId, req.body.channel );
         res.status(201).json(new ApiResponse(201, noti, "Success"));
     }
 

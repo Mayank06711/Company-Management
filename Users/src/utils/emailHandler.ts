@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import nodemailer from "nodemailer";
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { ApiError } from "./apiError";
@@ -45,42 +44,6 @@ const sendEmails = async (options: EventData) => {
       subject: options.subject,
       text: options.message,
     };
-=======
-import  nodemailer from "nodemailer"
-import SMTPTransport  from "nodemailer"
-import { ApiError } from "./apiError"
-import { EmailOptions } from "../types/scriptInterfaces"
-
-const sendEmail = async(option:EmailOptions)=>{
-    // create a transporter
-     try {
-
-           const transporter = nodemailer.createTransport({
-              host: process.env.EMAIL_HOSTNAME!,
-              port: process.env.EMAIL_PORT!,
-              secure: false, // true for 465, false for other ports
-              auth: {
-                  user: process.env.EMAIL_USERNAME!, // generated ethereal user
-                  pass:  process.env.EMAIL_USERNAME_PASSWORD!, // generated ethereal password
-              },
-          } as any);
-      
-          //Define email options
-          const emailOption = {
-              from:"XYZ-PVT.LMT support<support@xyz.com>",
-              to:option.email,
-              subject:option.subject,
-              text:option.message,
-          }
-         await transporter.sendMail(emailOption)
-         // emit event from here
-         console.log("Email sent successfully-> \n")
-     } catch (error:any) {
-        console.log(error, "Error sending email-> \n")
-        // emit event here also
-        throw new ApiError(500, "Nodemailer error", error.message)
-     }
->>>>>>> ddf76d85eae97ce49613666097abc51445c45aa7
    }
    
     await transporter.sendMail(emailOption);
